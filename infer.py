@@ -161,4 +161,4 @@ if __name__ == "__main__":
     model.eval()
     play_tic_tac_toe(model)
 
-    
+# Run the script and play Tic Tac Toe against the AI model. The model will make its move based on the predicted win probability for each possible move. You can train the model using the provided training script and then use the trained model for inference in the game.
