@@ -278,11 +278,30 @@ Two things follow.
 
 **9.2 The measurement [M].** The learner of ARCHITECTURE.md was run on text8 with its keys limited to r determinables. Records were counted on one million characters; the figures are bits per character on a held-out half million, static and dynamic as defined there.
 
-RANK_TABLE
+| Keys conjoin at most | Sorts admitted | Static | Dynamic |
+|---|---|---|---|
+| one determinable | 18 | 1.784 | 1.728 |
+| two | 16 | 1.748 | 1.690 |
+| six (the rule never used more than three) | 19 | 1.726 | 1.675 |
+
+For comparison, at the same text: Kneser–Ney n-gram 2.050, PPM 2.132 static and 1.926 dynamic.
+
+Keys of a single determinable already do better than the classical models. That is less surprising than it sounds, because the determinables are not signs: `run<_>` is a whole run of signs since the last space, taken as one object, and a determinable with a hundred thousand values. The second determinable is worth 0.036 bits and the third 0.022. Left free to conjoin six, the rule stopped at three. So relative to the determinables the tower builds, the dependence the rule could find in text8 has rank three, and most of it has rank one. What the measurement cannot say is whether more is there at rank four and above that a greedy rule, adding one determinable at a time, does not see.
 
 **9.3 How analysed is the picture? [M]** In a fully analysed form every fact is either repeated or new and uniform (THEORY Proposition 5.1). For the two-valued facts of the learned picture that means a probability near 0 or 1, or near ½. The distribution of the probability the learned form gave to the fact that occurred, over the held-out facts:
 
-ANALYSED_TABLE
+| Probability given to what occurred | Share of the facts | Share of the bits |
+|---|---|---|
+| below 0.05 | 0.6% | 10.1% |
+| 0.05 to 0.2 | 2.3% | 18.6% |
+| 0.2 to 0.4 | 5.4% | 25.2% |
+| 0.4 to 0.6 | 6.8% | 18.4% |
+| 0.6 to 0.8 | 12.6% | 17.6% |
+| 0.8 to 0.95 | 17.4% | 8.4% |
+| 0.95 to 0.99 | 13.3% | 1.4% |
+| above 0.99 | 41.8% | 0.3% |
+
+(Records on one million characters, static reading, 4.73 facts and 1.723 bits per character.) Four facts in ten are repeated facts in the theory's sense: shown, at under one hundredth of a bit each. But the rest is not new-and-uniform. A quarter of the facts are given between 0.2 and 0.8 and carry 61% of the bits, and 3% are near-contradictions of the picture and carry 29%. By the test of THEORY 7.1 this residue is not elementary: the form is far from the bottom of analysis, and the measure of how far is this table.
 
 **Status.** "Is language tame?" (THEORY 10.3) asked for bounded VC dimension after analysis. §9.1 shows that the tree-rank version of the question has a trivial answer. The version that is left is quantitative: how fast do classes fill, at keys of the length text needs? That is a learning curve, and ARCHITECTURE §5 reports the only two points of it measured here.
 

@@ -20,7 +20,7 @@ Two rules were set for the work and are audited in ARCHITECTURE §0 and §6: the
 | `pm/worlds.py` | the two small worlds |
 | `experiments/` | every run reported in ARCHITECTURE §5 |
 | `baselines/` | Kneser–Ney n-gram, PPM, transformer (reference models; their own README) |
-| `results/` | the numbers, as written by the runs |
+| `results/` | the numbers, as written by the runs; `results/TABLES.md` collects them |
 
 ## Reproducing
 
@@ -30,7 +30,7 @@ Needs Python 3 with numpy and numba (torch only for the transformer baseline), a
 python3 checks/solutions_checks.py            # the theorems, ~30 s
 python3 checks/causality.py                   # causality and normalisation of the machine
 python3 experiments/learn_text8.py --out runs/form.pkl --min-gain 0.0003 --max-sorts 48
-python3 experiments/eval_text8.py --form runs/form.pkl --n 10000000
+python3 experiments/eval_text8.py --form runs/form.pkl --n 10000000 --modes static   # ~10 GB; one mode per process
 experiments/ablations.sh                      # which operations earn the result
 python3 experiments/synthetic.py              # the two small worlds
 ```
