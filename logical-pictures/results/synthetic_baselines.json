@@ -1,0 +1,74 @@
+[
+ {
+  "world": "respelled recall",
+  "model": "PPM-C order 5",
+  "mode": "dynamic",
+  "bits_at_determined": 3.1809293500173186,
+  "bits_per_sign": 3.9060861498145787
+ },
+ {
+  "world": "respelled recall",
+  "model": "PPM-C order 5",
+  "mode": "static",
+  "bits_at_determined": 3.302693373894207,
+  "bits_per_sign": 3.9720988562191994
+ },
+ {
+  "world": "respelled recall",
+  "model": "transformer",
+  "mode": "static",
+  "bits_at_determined": 1.035249909619382,
+  "bits_per_sign": 2.0442724627508237,
+  "steps": 4253,
+  "params": 236385,
+  "budget": 240.0
+ },
+ {
+  "world": "analogy, signs of the corpus",
+  "model": "PPM-C order 5",
+  "mode": "dynamic",
+  "bits_at_determined": 3.703261082282353,
+  "bits_per_sign": 5.309278814792644
+ },
+ {
+  "world": "analogy, signs of the corpus",
+  "model": "PPM-C order 5",
+  "mode": "static",
+  "bits_at_determined": 3.828161945650083,
+  "bits_per_sign": 5.366203388858197
+ },
+ {
+  "world": "analogy, signs never seen",
+  "model": "PPM-C order 5",
+  "mode": "dynamic",
+  "bits_at_determined": 7.255410893025507,
+  "bits_per_sign": 8.1989351536352
+ },
+ {
+  "world": "analogy, signs never seen",
+  "model": "PPM-C order 5",
+  "mode": "static",
+  "bits_at_determined": 16.86789387148636,
+  "bits_per_sign": 16.407481810219792
+ },
+ {
+  "world": "analogy, signs of the corpus",
+  "model": "transformer",
+  "mode": "static",
+  "bits_at_determined": 0.02212176258949866,
+  "bits_per_sign": 3.8969363969933273,
+  "steps": 3430,
+  "params": 307409,
+  "budget": 240.0
+ },
+ {
+  "world": "analogy, signs never seen",
+  "model": "transformer",
+  "mode": "static",
+  "bits_at_determined": 19.719368900564476,
+  "bits_per_sign": 19.076161691837456,
+  "steps": 3430,
+  "params": 307409,
+  "budget": 240.0
+ }
+]

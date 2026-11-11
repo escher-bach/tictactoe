@@ -3,18 +3,21 @@
 [PASS] S2 union closure: 1566 disjoint pairs of good sets with equal generic type: union good
 [PASS] S2 overlap bound: 10654 pairs of good sets with different generic type: |A&B| < eps(|A|+|B|)
 [PASS] S2 predictive uniqueness: 200 pairs of any-split runs: predictions of a random k-test function differ on < 2k*eps*n contexts (largest ratio to the bound 0.31)
+[PASS] S2 exact case: type classes are pure and no union of two of them is: the type partition is the coarsest
+[PASS] S2 membership is not determined: a determinable with 11 values: the whole set is 0.1-good, and so is every value class
 [PASS] S2 no canonical partition: rank-1 relation with two reduced good partitions that differ on a block of 10 of 210 contexts
 [PASS] S3 arithmetic: with mu = eps^2 (eps/4)^(2t): N*mu <= eps and N <= (8e ln(4/eps)/eps)^t on a grid of (eps, t), t <= 12
 [PASS] S3 rank of split tree: 120 random relations: split tree rank <= exact tree rank of the relation (brute force)
 [PASS] S3 exceptional set: classes that are not good are exactly unsplit small ones; mass <= mu*n*classes
 [PASS] S4 path types by refinement: partition after l rounds of refinement = types over all paths of length <= l (200 random link systems)
 [PASS] S4 confluence for fixed links: single-class splits in random order all end at the coarsest stable partition
+[PASS] S4 recency makes the order matter: text 'aba': sign move first ends at (0, 1, 0), recency move first ends at (0, 1, 2); both are fixed points of both moves
 [PASS] S4 recency is not monotone: text 'aaba', criterion (0, 0, 1, 0) refines the trivial one, but its recency refinement does not refine the trivial criterion's
 [PASS] S5 parity: raw facts vs count scale: (k, rank over the k facts, rank over thresholds of their count) = [(1, 1, 1), (2, 2, 1), (3, 3, 1), (4, 4, 1)]
 [PASS] S5 any function of an integer form: rank over the thresholds of the scale <= 1 for 300 random g(sum w_i x_i)
 [PASS] S6 rank <= log2(types): 150 random relations, exact rank by brute force
 [PASS] S6 product of d determinables: rank <= d for 60 random products of 1..3 determinables with 2..4 values (attained in some)
 [PASS] S6 exclusive sorts: (dims, exact rank, floor log2 sum 2^d, rank of the free product) = [((1, 1), 2, 2, 2), ((2, 2), 3, 3, 4), ((2, 1, 1), 3, 3, 4), ((3, 1), 3, 3, 4), ((2, 2, 2), 3, 3, 6), ((3, 3), 4, 4, 6), ((1, 1, 1, 1), 2, 3, 4)]
-[PASS] S7 lambda-free estimate: no lambda fits the rule on profiles of size <= 6 (best sup-gap 0.254); profile frequencies within 0.010 of the exact rule; bits/fact: profile 0.6482, best single lambda 0.7091, exact rule 0.6477
-[PASS] S8 pattern law: |V|=3, n=4: P(x) = P(pattern(x)) / (|V| falling k) for every string
+[PASS] S7 lambda-free estimate: profile frequencies within 0.010 of the exact rule; no Beta(u, w) rule comes closer than 0.173 on profiles of size <= 6 (symmetric lambda: 0.254); bits/fact: exact rule 0.6477, profile table 0.6482, best Beta(u, w) 0.6727, best symmetric lambda 0.7090
+[PASS] S8 pattern law: |V|=3, n=4: an invariant law is its pattern law over the falling factorial, and conversely
 ALL PASS

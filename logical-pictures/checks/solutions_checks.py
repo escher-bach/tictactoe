@@ -277,6 +277,26 @@ def check_S2():
            f"{runs} pairs of any-split runs: predictions of a random k-test function differ on "
            f"< 2k*eps*n contexts (largest ratio to the bound {worst:.2f})")
 
+    # exact case: with "no test has both sides non-empty", the coarsest good partition is the type partition
+    ok0 = True
+    for _ in range(40):
+        n, m = 8, RNG.randint(1, 3)
+        R = [[RNG.randrange(2) for _ in range(m)] for _ in range(n)]
+        pure = lambda A: all(len({R[a][s] for a in A}) == 1 for s in range(m))
+        types = {}
+        for a in range(n):
+            types.setdefault(tuple(R[a]), []).append(a)
+        ok0 &= all(pure(A) for A in types.values())
+        ok0 &= all(not pure(A + B) for A, B in itertools.combinations(types.values(), 2))
+    report("S2 exact case", ok0, "type classes are pure and no union of two of them is: the type partition is the coarsest")
+
+    # membership can disagree everywhere: one determinable with 11 equally frequent values, eps = 0.1
+    R = [[int(a % 11 == v) for v in range(11)] for a in range(110)]
+    whole = is_good(R, range(110), 0.1)
+    by_value = all(is_good(R, [a for a in range(110) if a % 11 == v], 0.1) for v in range(11))
+    report("S2 membership is not determined", whole and by_value,
+           "a determinable with 11 values: the whole set is 0.1-good, and so is every value class")
+
     # the counterexample: one test, three blocks
     a, b0, b1, c, e = 100, 5, 5, 100, 0.1
     R = [[0]] * a + [[0]] * b0 + [[1]] * b1 + [[1]] * c
@@ -432,6 +452,49 @@ def check_S4():
                 break
         if found:
             break
+    # order-dependence: two moves, each applied until nothing changes, in the two orders.
+    #   sign move:    split classes by the position's own sign
+    #   recency move: split classes by the class of the position just before the most recent
+    #                 earlier position of the same class
+    def sign_move(P, x):
+        return canon2(list(zip(P, x)))
+
+    def rec_move(P, x):
+        f = []
+        for t in range(len(x)):
+            u = max((u for u in range(t) if P[u] == P[t]), default=None)
+            f.append(None if u is None or u == 0 else P[u - 1])
+        return canon2(list(zip(P, f)))
+
+    def canon2(col):
+        seen = {}
+        return tuple(seen.setdefault(c, len(seen)) for c in col)
+
+    def closure(P, x, moves):
+        while True:
+            Q = P
+            for mv in moves:
+                while True:
+                    Q2 = mv(Q, x)
+                    if Q2 == Q:
+                        break
+                    Q = Q2
+            if Q == P:
+                return P
+            P = Q
+    diff = None
+    for n in range(2, 6):
+        for x in itertools.product("ab", repeat=n):
+            A = closure((0,) * n, x, (sign_move, rec_move))
+            B = closure((0,) * n, x, (rec_move, sign_move))
+            if A != B:
+                diff = ("".join(x), A, B)
+                break
+        if diff:
+            break
+    report("S4 recency makes the order matter", diff is not None,
+           f"text {diff[0]!r}: sign move first ends at {diff[1]}, recency move first ends at {diff[2]}; "
+           f"both are fixed points of both moves")
     report("S4 recency is not monotone", found is not None,
            f"text {found[0]!r}, criterion {found[1]} refines the trivial one, but its recency "
            f"refinement does not refine the trivial criterion's")
@@ -584,19 +647,35 @@ def check_S7():
         return tot
 
     test = seq[M // 2:]
-    bp = sum(map(bits_profile, test)) / (len(test) * n_occ)
-    bl = min(sum(bits_lambda(s, lam) for s in test) / (len(test) * n_occ) for lam in (0.05, 0.1, 0.2, 0.5, 1, 2, 4))
-    ideal = 0.0
-    for s in test:
+    trans = {}
+    for sq in test:
         a = b = 0
-        for v in s:
-            p = r_exact(a, b)
-            ideal -= math.log2(p if v else 1 - p)
+        for v in sq:
+            c = trans.setdefault((a, b), [0, 0])
+            c[v] += 1
             a, b = a + v, b + 1 - v
-    ideal /= len(test) * n_occ
-    report("S7 lambda-free estimate", best_gap > 5 * max_dev and bp - ideal < 0.1 * (bl - ideal),
-           f"no lambda fits the rule on profiles of size <= 6 (best sup-gap {best_gap:.3f}); profile frequencies within {max_dev:.3f} of the "
-           f"exact rule; bits/fact: profile {bp:.4f}, best single lambda {bl:.4f}, exact rule {ideal:.4f}")
+    nfacts = len(test) * n_occ
+
+    def bits_rule(rule):
+        tot = 0.0
+        for (a, b), c in trans.items():
+            p = min(max(rule(a, b), 1e-9), 1 - 1e-9)
+            tot -= c[1] * math.log2(p) + c[0] * math.log2(1 - p)
+        return tot / nfacts
+
+    def prof_rule(a, b):
+        c = cnt.get((a, b), [0, 0])
+        return (c[1] + 0.5) / (c[0] + c[1] + 1.0)
+    grid = [0.02 * 1.35 ** i for i in range(24)]
+    bp = bits_rule(prof_rule)
+    bl = min(bits_rule(lambda a, b, l=l: (a + l / 2) / (a + b + l)) for l in grid)
+    bb = min(bits_rule(lambda a, b, u=u, w=w: (a + u) / (a + b + u + w)) for u in grid for w in grid)
+    ideal = bits_rule(r_exact)
+    gap_beta = min(max(abs(r_exact(a, b) - (a + u) / (a + b + u + w)) for a, b in prof) for u in grid for w in grid)
+    report("S7 lambda-free estimate", gap_beta > 5 * max_dev and bp < bb < bl and bp - ideal < 0.2 * (bb - ideal),
+           f"profile frequencies within {max_dev:.3f} of the exact rule; no Beta(u, w) rule comes closer than "
+           f"{gap_beta:.3f} on profiles of size <= 6 (symmetric lambda: {best_gap:.3f}); bits/fact: exact rule "
+           f"{ideal:.4f}, profile table {bp:.4f}, best Beta(u, w) {bb:.4f}, best symmetric lambda {bl:.4f}")
 
 
 # ---------------------------------------------------------------- S8
@@ -622,8 +701,14 @@ def check_S8():
         k = len(set(x))
         falling = math.prod(V - i for i in range(k))
         ok &= abs(P[x] - pat[pattern(x)] / falling) < 1e-12
-    # converse: any law on patterns gives an invariant law
-    report("S8 pattern law", ok, f"|V|={V}, n={n}: P(x) = P(pattern(x)) / (|V| falling k) for every string")
+    # converse: any law on patterns (with at most |V| blocks) gives an invariant law that sums to 1
+    pats = sorted(pat)
+    w2 = [RNG.random() for _ in pats]
+    Pi = {q: v / sum(w2) for q, v in zip(pats, w2)}
+    Q = {x: Pi[pattern(x)] / math.prod(V - i for i in range(len(set(x)))) for x in strings}
+    ok &= abs(sum(Q.values()) - 1) < 1e-12
+    ok &= all(abs(Q[x] - Q[tuple(p[c] for c in x)]) < 1e-12 for x in strings for p in perms)
+    report("S8 pattern law", ok, f"|V|={V}, n={n}: an invariant law is its pattern law over the falling factorial, and conversely")
 
 
 if __name__ == "__main__":
