@@ -1,0 +1,9 @@
+{"note": "test slice text8[97.0M:97.5M], never read during development; baselines run with TEXT8_PATH pointing at a copy of text8 whose test slice is replaced by it (model selection still on text8[90.0M:90.2M])",
+ "rows": [
+  {"model": "ngram-mkn order 8", "ntrain": 1000000, "mode": "static", "test_bpc": 2.0133},
+  {"model": "ngram-mkn order 8", "ntrain": 10000000, "mode": "static", "test_bpc": 1.7789},
+  {"model": "ppm-D order 5", "ntrain": 1000000, "mode": "static", "test_bpc": 2.0903},
+  {"model": "ppm-D order 5", "ntrain": 1000000, "mode": "dynamic", "test_bpc": 1.9085},
+  {"model": "ppm-D order 6", "ntrain": 10000000, "mode": "static", "test_bpc": 1.8416},
+  {"model": "ppm-D order 6", "ntrain": 10000000, "mode": "dynamic", "test_bpc": 1.7657}
+ ]}
