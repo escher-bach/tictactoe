@@ -25,7 +25,7 @@ well under 0.001 bpc.
 | modified Kneser–Ney n-gram (best order on valid) | static | 1.9888 | **2.0503** (8-gram) | 1.7368 | **1.7976** (8-gram) |
 | PPM (best config on valid) | static | 2.0711 | **2.1322** (PPMD, order 5) | 1.8046 | **1.8613** (PPMD, order 6) |
 | PPM (best config on valid) | dynamic | 1.8988 | **1.9260** (PPMD, order 5) | 1.7450 | **1.7872** (PPMD, order 6) |
-| transformer, 2 layers × d=96, 253,659 params | static | 2.2604 | **2.2800** | T10_VALID | **T10_TEST** |
+| transformer, 2 layers × d=96, 253,659 params | static | 2.2604 | **2.2800** | 1.9320 | **1.9788** |
 
 Read these with three things in mind:
 
@@ -196,26 +196,31 @@ result (129).
 | layers × d × heads | 2 × 96 × 4 | 2 × 96 × 4 |
 | parameters | 253,659 | 253,659 |
 | dropout | 0.1 | 0.0 |
-| training budget / used | 600 s / 595.5 s | 1500 s / T10_SECS s |
-| steps | 8,733 | T10_STEPS |
-| tokens seen | 17.9M (17.9 epochs) | T10_TOKENS |
-| throughput | 30.0k tokens/s | T10_TPS |
-| 1-min load average, start → end | 3.99 → 4.38 | T10_LOAD |
-| valid bpc | 2.2604 | T10_VALID |
-| **test bpc** | **2.2800** | **T10_TEST** |
+| training budget / used | 600 s / 595.5 s | 1500 s / 1496.2 s |
+| steps | 8,733 | 21,645 |
+| tokens seen | 17.9M (17.9 epochs) | 44.3M (4.4 epochs) |
+| throughput | 30.0k tokens/s | 29.6k tokens/s |
+| 1-min load average, start → end | 3.99 → 4.38 | 4.22 → 4.93 |
+| valid bpc | 2.2604 | 1.9320 |
+| **test bpc** | **2.2800** | **1.9788** |
 
 Dropout is on the embeddings and on both residual branches. 0.1 was chosen for
 N = 1M because the model passes over the data about 18 times; 0.0 for N = 10M
-because it sees the data only T10_EPOCHS times.
+because a 254k-parameter model that passes over 10M chars about 4 times has
+little room to memorise them.
 
 ### Validation curves
 
 `train` is the mean training loss since the previous point (with dropout active
-for N = 1M); `valid` is the validation subset.
+for N = 1M). `valid subset` is the checkpoint-selection subset, **not** the
+reported valid bpc: it is a harder passage (the 8-gram trained on 10M scores
+1.783 on it against 1.737 on all of valid) and its windows give shorter
+contexts. That is why it sits 0.03 (1M) and 0.12 (10M) above the final valid
+number.
 
 N = 1M:
 
-| time (s) | step | lr | train bpc | valid bpc |
+| time (s) | step | lr | train bpc | valid subset bpc |
 |---|---|---|---|---|
 | 397 | 5,753 | 8.4e-4 | 2.1225 | 2.3279 |
 | 446 | 6,485 | 5.2e-4 | 2.0901 | 2.3171 |
@@ -225,7 +230,13 @@ N = 1M:
 
 N = 10M:
 
-T10_CURVE
+| time (s) | step | lr | train bpc | valid subset bpc |
+|---|---|---|---|---|
+| 998 | 14,290 | 8.4e-4 | 1.9975 | 2.1392 |
+| 1,123 | 15,832 | 5.2e-4 | 1.9607 | 2.1103 |
+| 1,247 | 17,738 | 2.7e-4 | 1.9250 | 2.0765 |
+| 1,372 | 19,734 | 1.1e-4 | 1.8985 | 2.0598 |
+| 1,496 | 21,645 | 6.0e-5 | 1.8817 | 2.0534 |
 
 Full curves are in the `curve` field of each transformer line in `results.jsonl`.
 
@@ -268,12 +279,14 @@ The final runs therefore use 2 layers × d=96 for both N.
 
 ### Caveats for the transformer numbers
 
-- **It is clearly undertrained.** At N = 10M the model is still improving when
-  the schedule ends (see the curve above); the number measures "what 25 CPU
-  minutes buys", not what the architecture can do.
-- **At N = 1M it is data-limited as well.** The train/valid gap is about 0.25 bpc
-  by the end even with dropout, and valid is only creeping down (2.301 → 2.298
-  → 2.293 over the last 100 s).
+- **It is clearly undertrained.** At N = 10M the validation subset fell by 0.086
+  over the last 500 s and flattened only because the learning rate was annealed
+  to its floor. The result (1.979 test) is 0.18 bpc behind the 8-gram and behind
+  the 6-gram too. The number measures what 25 contended CPU minutes buy, not
+  what the architecture can do.
+- **At N = 1M it is data-limited as well.** Training loss ends at 2.04 (with
+  dropout active) against 2.26 on valid, and the validation subset is only
+  creeping down (2.301 → 2.298 → 2.293 over the last 100 s).
 - **The size choice rests on 2-minute pilots, which favour small models.** A
   120 s pilot mostly measures how fast a model escapes the plateau. Whether
   3 × 128 or 4 × 128 would beat 2 × 96 over the full 10 or 25 minutes was not
