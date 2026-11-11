@@ -18,6 +18,8 @@ Feature specs are tuples:
   ('EQ', f, g)    whether two features show the same value    (sameness of sign)
   ('CLS', f)      the class of f's object under any-split over its record (abstraction)
   ('XC', f)       the class of f's value under identities shown by recency (a learned key)
+  ('WC', k, d)    the class, at depth d of the object tree, of the k-th completed object back
+  ('CUR', d)      the class at depth d of the object now being spelled (stated before its signs)
 """
 import pickle
 import time
@@ -27,6 +29,7 @@ import numpy as np
 from numba import njit
 
 from . import kernels as K
+from .tower import Tower
 
 
 # ----------------------------------------------------------------- sign code (M3)
@@ -150,7 +153,7 @@ def fkeys_literal(key, fpos, fnode, out):
         if k == 0:
             out[i] = 0
         else:
-            h = (k ^ np.uint64(fnode[i] + 1)) * np.uint64(0xD6E8FEB86659FD93)
+            h = (k ^ np.uint64(np.int64(fnode[i]) + 1)) * np.uint64(0xD6E8FEB86659FD93)
             h ^= h >> np.uint64(32)
             out[i] = h | np.uint64(1)
 
@@ -173,6 +176,15 @@ def fkeys_pointer(key, ptr, fpos, fdepth, fnode, fbit, codenode, codebit, out, l
             lab[i] = fbit[i] ^ codebit[s, d]
 
 
+def mentions_cur(spec):
+    """Does a feature or key depend, at any depth, on the class of the object being spelled?"""
+    if not isinstance(spec, tuple):
+        return False
+    if spec and spec[0] == "CUR":
+        return True
+    return any(mentions_cur(part) for part in spec)
+
+
 def canon_key(feats):
     return tuple(sorted(set(feats), key=repr))
 
@@ -181,18 +193,35 @@ def canon_key(feats):
 class Picture:
     """A text, its facts under a sign code, and the features built over it so far."""
 
-    def __init__(self, x, code, bounds, ntrain, aux=None):
+    def __init__(self, x, code, bounds, ntrain, aux=None, tower=None):
         self.x = np.ascontiguousarray(x, dtype=np.int64)
         self.n = len(x)
         self.code, self.bounds, self.ntrain = code, bounds, ntrain
         self.aux = {} if aux is None else aux          # learned class maps, keyed by feature spec
-        dep = code["depth"][self.x].astype(np.int64)
-        self.off = np.concatenate([[0], np.cumsum(dep)])
+        self.tower = tower
+        sd = code["depth"][self.x].astype(np.int64)
+        cd = np.zeros(self.n, np.int64)                 # object facts stated where an object begins
+        if tower is not None:
+            typ_at = np.zeros(self.n, np.int64)
+            typ_at[tower.start] = tower.type_of
+            cd[tower.start] = tower.depth[tower.type_of]
+        self.off = np.concatenate([[0], np.cumsum(cd + sd)])
         self.M = int(self.off[-1])
-        self.fpos = np.repeat(np.arange(self.n, dtype=np.int32), dep)
-        self.fdepth = (np.arange(self.M) - self.off[self.fpos]).astype(np.int8)
-        self.fnode = code["codenode"][self.x[self.fpos], self.fdepth].astype(np.int16)
-        self.fbit = code["codebit"][self.x[self.fpos], self.fdepth].astype(np.uint8)
+        self.fpos = np.repeat(np.arange(self.n, dtype=np.int32), cd + sd)
+        j = np.arange(self.M) - self.off[self.fpos]
+        self.fobj = j < cd[self.fpos]                   # is this a fact about an object?
+        jd = np.where(self.fobj, 0, j - cd[self.fpos])
+        self.fdepth = jd.astype(np.int8)
+        fnode = code["codenode"][self.x[self.fpos], jd].astype(np.int64)
+        fbit = code["codebit"][self.x[self.fpos], jd]
+        if tower is not None and self.fobj.any():
+            ty = typ_at[self.fpos[self.fobj]]
+            jo = j[self.fobj]
+            fnode[self.fobj] = code["nnodes"] + 1 + tower.pnode[ty, jo]
+            fbit = fbit.copy()
+            fbit[self.fobj] = tower.pbit[ty, jo]
+        self.fnode = fnode.astype(np.int32)
+        self.fbit = fbit.astype(np.uint8)
         self.Mtrain = int(self.off[ntrain])
         self.cache = {}
         self.keycache = {(): np.ones(self.n, np.uint64)}
@@ -243,6 +272,17 @@ class Picture:
             else:
                 out = np.ones(n, np.uint64)
             out = np.where(obj == 0, np.uint64(0), out).astype(np.uint64)
+        elif kind in ("WC", "CUR"):
+            tw = self.tower
+            cur = tw.run_tok
+            if kind == "CUR":
+                tok = cur
+            else:
+                # the k-th completed object before the one in progress
+                last = np.searchsorted(tw.start, np.arange(n), side="right") - 1
+                tok = np.where(cur >= 0, cur - spec[1], last - (spec[1] - 1))
+            d = min(spec[-1], tw.max_depth)
+            out = np.where(tok >= 0, tw.classid[tw.type_of[np.maximum(tok, 0)], d], 0).astype(np.uint64)
         elif kind == "XC":
             fv = self.feature(spec[1])
             if spec not in self.aux:
@@ -316,7 +356,7 @@ class Picture:
         ids, counts = ids[keep], counts[keep].astype(np.float64)
         if len(ids) < 4:
             return ids, np.full(len(ids), 2, np.uint64)
-        sel = self.fdepth[:self.Mtrain] <= maxdepth
+        sel = (self.fdepth[:self.Mtrain] <= maxdepth) & ~self.fobj[:self.Mtrain]
         fo = obj[self.fpos[:self.Mtrain][sel]]
         fn = self.fnode[:self.Mtrain][sel].astype(np.int64)
         fb = self.fbit[:self.Mtrain][sel]
@@ -358,10 +398,15 @@ class Picture:
         fkey = np.empty(self.M, np.uint64)
         if ptr is None:
             fkeys_literal(key, self.fpos, self.fnode, fkey)
+            if self.tower is not None and mentions_cur(keyspec):
+                fkey[self.fobj] = 0                     # an object's class is not known while it is being stated
             return fkey, self.fbit
         lab = np.empty(self.M, np.uint8)
         fkeys_pointer(key, self.feature(ptr), self.fpos, self.fdepth, self.fnode, self.fbit,
                       self.code["codenode"], self.code["codebit"], fkey, lab)
+        if self.tower is not None:                      # pointers show signs, not object facts
+            fkey[self.fobj] = 0
+            lab[self.fobj] = self.fbit[self.fobj]
         return fkey, lab
 
     def profiles(self, sort, freeze=None):
@@ -384,10 +429,15 @@ class Learner:
 
     def __init__(self, x, V, ntrain, max_key=6, max_offset=12, class_depths=(1, 2, 3),
                  threads=3, min_gain=0.002, log=print, use=("S", "C", "W", "R", "EQ", "CLS", "PTR", "XC"),
-                 code_eps=0.1):
+                 code_eps=0.1, tower=None, tower_depths=(2, 3, 5, 7, 10, 16)):
         self.code = build_code(x[:ntrain], V, code_eps)
         self.bounds = boundary_candidates(self.code, x[:ntrain]) if "W" in use else []
-        self.pic = Picture(x, self.code, self.bounds, ntrain)
+        self.tower_args = tower
+        tw = None
+        if tower is not None:                           # tower: dict(boundary=..., rounds=...)
+            tw = Tower(x, V, ntrain=ntrain, log=log, **tower)
+        self.tower_depths = tower_depths
+        self.pic = Picture(x, self.code, self.bounds, ntrain, tower=tw)
         self.use, self.max_key, self.max_offset = set(use), max_key, max_offset
         self.class_depths = [d for d in class_depths if d < self.code["D"]]
         self.threads, self.min_gain, self.log = threads, min_gain, log
@@ -407,6 +457,10 @@ class Learner:
         if "EQ" in self.use:
             self._add(("EQ", ("S", 1), ("S", 2)))
         self._add(("XC", ("S", 1)))
+        if tw is not None:
+            for d in self.tower_depths:
+                self.pool.append(("WC", 1, d))
+                self.pool.append(("CUR", d))
 
     # -- bookkeeping -------------------------------------------------------
     def _add(self, f):
@@ -453,6 +507,10 @@ class Learner:
             if f[0] == "W":
                 self._add(("PW", f[1], 1))
                 self._add(("CLS", f))
+            if f[0] == "WC" and f[1] < 3:
+                for d in self.tower_depths:
+                    if ("WC", f[1] + 1, d) not in self.pool:
+                        self.pool.append(("WC", f[1] + 1, d))
             if f[0] == "PW":
                 if f[2] < 3:
                     self._add(("PW", f[1], f[2] + 1))
@@ -483,7 +541,7 @@ class Learner:
         ptr = p.feature(sort[1]).astype(np.int64)[p.fpos] - 1
         cb = p.code["codebit"][np.maximum(ptr, 0), p.fdepth]
         cn = p.code["codenode"][np.maximum(ptr, 0), p.fdepth]
-        flip = (ptr >= 0) & (cn == p.fnode) & (cb == 1)
+        flip = (ptr >= 0) & (cn == p.fnode) & (cb == 1) & ~p.fobj
         return np.where(flip, -1.0, 1.0).astype(np.float32)
 
     # -- candidates ----------------------------------------------------------
@@ -568,7 +626,7 @@ class Learner:
 
     def form(self):
         return dict(code=self.code, bounds=self.bounds, sorts=list(self.sorts),
-                    history=list(self.history))
+                    history=list(self.history), tower=self.tower_args)
 
 
 def fmt_feature(f, bounds=None):
@@ -589,6 +647,10 @@ def fmt_feature(f, bounds=None):
         return f"cls({fmt_feature(f[1], bounds)})"
     if k == "XC":
         return f"key({fmt_feature(f[1], bounds)})"
+    if k == "WC":
+        return f"kind{f[2]}[-{f[1]}]"
+    if k == "CUR":
+        return f"kind{f[1]}[this]"
     return str(f)
 
 
@@ -607,7 +669,10 @@ def run_form(form, x_train, x_test, static=False, log=None, sorts=None):
     links, are particulars of that text and behave as during training.
     """
     x = np.concatenate([x_train, x_test])
-    p = Picture(x, form["code"], form["bounds"], len(x_train))
+    tw = None
+    if form.get("tower"):
+        tw = Tower(x, form["code"]["V"], ntrain=len(x_train), **form["tower"])
+    p = Picture(x, form["code"], form["bounds"], len(x_train), tower=tw)
     st = np.zeros(p.M, np.float32)
     ntest = len(x_test)
     ladder = []
@@ -621,7 +686,7 @@ def run_form(form, x_train, x_test, static=False, log=None, sorts=None):
             ptr = p.feature(sort[1]).astype(np.int64)[p.fpos] - 1
             cb = p.code["codebit"][np.maximum(ptr, 0), p.fdepth]
             cn = p.code["codenode"][np.maximum(ptr, 0), p.fdepth]
-            sign = np.where((ptr >= 0) & (cn == p.fnode) & (cb == 1), -1.0, 1.0).astype(np.float32)
+            sign = np.where((ptr >= 0) & (cn == p.fnode) & (cb == 1) & ~p.fobj, -1.0, 1.0).astype(np.float32)
             rel = st * sign
             P = K.fit_table(rel, q, lab, 0, p.Mtrain)
             new = np.empty_like(st)
