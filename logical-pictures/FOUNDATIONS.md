@@ -1,6 +1,6 @@
 # Foundations, again
 
-*A restart. The learner that was in this folder has been removed: it supplied its own objects by hand and then reported scores. This file goes back to the two source notes, THEORY ("Logical pictures") and WITNESSES ("Witness selection"), says what they are, says exactly where the theory was too immature to build on, and proves what can be proved before anything is run on text.* Marks: **[Def]**, **[P]** proved here, **[P✓]** proved and checked by brute force on small cases ([checks/foundations_checks.py](checks/foundations_checks.py)), **[K]** known, cited from memory, **[C]** conjecture, **[Reading]** interpretation. Nothing in this file is a measurement on data.
+*A restart. The learner that was in this folder has been removed: it supplied its own objects by hand and then reported scores. This file goes back to the two source notes, THEORY ("Logical pictures") and WITNESSES ("Witness selection"), says what they are, says exactly where the theory was too immature to build on, proves what the objects of a law are, and only then builds the learner those theorems license.* Marks: **[Def]**, **[P]** proved here, **[P✓]** proved and checked by brute force on small cases ([checks/foundations_checks.py](checks/foundations_checks.py)), **[K]** known, cited from memory, **[C]** conjecture, **[Reading]** interpretation. The only measurements are in §9, and they are read as representations, not as scores.
 
 ---
 
@@ -20,14 +20,16 @@
 | 6 | **Not classical, at this level.** Where kinds are open, literal records are empty, and a model with kinds but without sameness loses the logarithm of the kind's size at every repeated name (§4) | [P] |
 | 7 | **The same form as a transformer's.** The optimal predictor of a law with kinds is a pointer over earlier positions selected by kind, plus a generator of new names: one attention layer with tied input and output codes. And every criterion a text can define in first-order logic with order is one a hard-attention transformer computes, and conversely (§5) | [P] for the form; [K] for the correspondence |
 
-**What is not established, and blocks any experiment.**
+| 8 | **Memory and states are canonical.** Each past has a least set of names its future depends on; pasts whose futures agree up to renaming form the states of one machine, determined by the law, whose memories have a size and a symmetry (§6) | [P✓] |
+| 9 | **Units are canonical in the limit.** Where units recombine freely, they are the basis of the smallest free submonoid containing the texts (§7) | [P, given K] |
+| 10 | A learner that uses only order, sameness and counts returns that machine, exactly with exact statistics, and does so on three worlds where every literal record is empty (§8, §9) | [P]; observed |
 
-Statements 3 to 7 are about the *signs of the text as given*. On raw bytes the signs are 256 bytes, their kinds are few and nearly trivial, and all the interesting objects are composite. The earlier build crossed that gap by writing a word-splitter and calling it a learned criterion. The theory of composite objects is the open problem (§6): I can state what a unit must be and lift every theorem above to units *once the units are given*, and I cannot yet prove that the units of a law are canonical or say how they are found. Until that is a theorem there is nothing honest to run.
+**What is still not established.** From raw bytes the names are spelled. Statement 9 is about the support of the law and has no finite-sample form yet, real names are not equally likely, and spellings have their own law (§7). So the experiment of §9 is on texts whose signs are already the units, and nothing here licenses one on bytes. §10 lists what is next.
 
-So, against the two conditions set for this work:
+Against the two conditions set for this work:
 
-- **(A) Does not converge to a classical method.** Proved for laws whose kinds are kinds of signs (§4). Open for composite objects.
-- **(B) Comparable with transformers.** The form the theory forces is the form transformers have (§5). That is a statement about representation. Nothing is claimed about learning dynamics.
+- **(A) Does not converge to a classical method.** Proved for laws with names (§4, §6.3). What the learner returns, states with memories and their symmetries, is not an object of any classical family.
+- **(B) Comparable with transformers.** The form the theory forces is the form transformers have, and the canonical machine is an attention network whose links are fixed by its state (§5, §6.3). That is a statement about representation. Nothing is claimed about learning dynamics.
 
 ---
 
@@ -203,43 +205,140 @@ It is not a comparison of **learning**. A transformer finds its criteria by grad
 
 ---
 
-## 6. The open problem: composite objects
+## 6. Memory: the canonical form of a law with names
 
-Everything above is about the signs as given. From raw bytes that is not enough, and this is the place the earlier build cheated.
+§3 reduced a law to its law Q on kinded patterns and stopped: "Q is arbitrary". This section says what the objects of Q are. The setting is that of *data words*, and the mathematics is that of nominal sets (Gabbay and Pitts; Bojańczyk, Klin and Lasota) **[K]**; the statements are proved here in the form needed.
 
-### 6.1 What lifts for free
+**Setting.** The signs are finitely many *closed* signs, each its own kind, and names, in one or more open kinds. Renamings are the permutations that preserve the kinds, and the law is invariant under them. For a past h with positive probability, μ_h is the law of what follows h. Assume each open kind has at least three more names than any text uses.
 
-**[Def] Unit system.** A set C of non-empty strings such that every text of the corpus is a concatenation of members of C in exactly one way (a code), together with a partition of C into kinds, such that the law is unchanged by exchanging two units of one kind wherever they occur as units.
+### 6.1 What a past remembers
 
-**Proposition 6.1 [P].** For a unit system, Theorems 3.1 to 3.3 and Propositions 4.1 and 4.2 hold with "sign" replaced by "unit".
+**[Def] Support, memory.** A set S of names *supports* μ_h when every renaming that fixes each member of S leaves μ_h unchanged. The names occurring in h always do.
 
-*Proof.* Unique factorisation makes the texts the free monoid on C, and the proofs used nothing about signs but that texts are sequences of them. ∎
+**Theorem 6.1 (least memory) [P✓, check F5].** If S and S′ support μ_h, so does S ∩ S′. So there is a least supporting set, mem(h): the names the future still depends on.
 
-So if the units were known, the perfect language would be: the kinded pattern of units; pointers to earlier units selected by kind; and new units, whose only content is their spelling. The spelling of a new unit is a short text over the signs with its own kinds and patterns, one level down. That is the shape of the tower from bytes, and it has two levels of the same thing, not a special module.
+*Proof.* Renamings fixing S ∩ S′ are generated by exchanges (a b) with a, b outside S ∩ S′. If both are outside S, or both outside S′, the exchange preserves μ_h. Otherwise say a ∈ S ∖ S′ and b ∉ S. Take a name c of the same kind outside S, S′, a and b. Then (a b) = (a c)(c b)(a c); (a c) moves nothing in S′ and (c b) moves nothing in S, so each factor preserves μ_h. ∎
 
-### 6.2 What is not known
+**Theorem 6.2 (the pointer form, sharpened) [P✓, check F5].**
 
-1. **Are the units of a law canonical?** For signs, Theorem 3.1 gives one partition. For units there are two choices at once, the code and its kinds, and I have no theorem that a law has a distinguished unit system: the finest one, or the one whose symmetry accounts for the most. Without that, any procedure that returns units is returning a convention, which is what a menu of boundary classes was.
-2. **How are they found?** The natural candidate is substitution: two strings are of one kind when replacing one by the other, everywhere, changes the probability of every text by a constant factor. That is a congruence on strings, the weighted analogue of the syntactic congruence of a language, and it is defined by the law alone. Its relation to unit systems (when its classes come from a code, whether the code is unique) is what has to be worked out. The known results on learning from substitutability are for a class of grammars **[K]** and by THEORY's own standard a tree-shaped grammar is a classical endpoint, so this cannot simply be taken over.
-3. **Exactness**, again (3.4, point 1), and now for strings.
-4. **The pattern law.** Q is unconstrained. Its analysis is where conjunction, path and the selection results of WITNESSES would re-enter, with density (2.3) in place of the rank budget and identity defined by exchange (3.1) in place of ε-goodness. None of that is written.
+1. Given h, all names outside mem(h) are equally likely to come next, whether they occurred in h or not. A forgotten name is exactly as good as a new one.
+2. mem(h·a) ⊆ mem(h) ∪ {a}. Memory changes only by taking in the sign just read and by letting names go.
 
-### 6.3 The gate
+*Proof.* (1) An exchange of two names outside mem(h) preserves μ_h. (2) A renaming that fixes mem(h) and a preserves μ_h and the event "a comes next", hence μ_{h·a}. ∎
 
-No experiment on text follows from this file. The conditions under which one would:
+So the pointers of Theorem 3.3 do not range over all earlier names. They range over a memory that the law determines, and the law also determines when a name leaves it. The particulars of a picture are these: the members of mem(h). Nothing had to be chosen to say what they are.
 
-1. a theorem that the units of a law are determined by the law, or a proof that they are not and a principled statement of what is determined instead;
-2. a procedure for them that uses only order, sameness and counts, with a stated cost;
-3. the corresponding statement for the pattern law, at least for one non-trivial class of laws.
+### 6.2 What a past is: states up to renaming
 
-When those exist, the test is the one in §5.3: read the representation. Exchange what the learner says is of one kind and see whether the law is unchanged.
+**[Def] State.** Two pasts are *in the same state* when some renaming carries the future law of one to that of the other. A state has a memory size, and a group of rearrangements of its memory that leave its law unchanged: its *symmetry*. A memory whose symmetry is everything is a set; one whose symmetry is trivial is a tuple.
+
+**Theorem 6.3 (the canonical machine) [P✓, check F5].**
+
+1. If h and h′ are in the same state by a renaming π, then h·a and h′·π(a) are. If a and b are names of one kind outside mem(h), then h·a and h·b are in the same state.
+2. So the states form a deterministic machine. From a state, the sign read is a closed sign, the name in a given place of the memory, or "a name outside the memory" of a given kind; each leads to one state, and says which names are kept. The law is given by the probabilities of these readings at each state.
+3. This machine is determined by the law. Any equivariant deterministic machine with a memory of names that generates the law maps onto it, state by state, and its memory contains mem(h) at every past.
+
+*Proof.* (1) μ_{h′·π(a)} is π applied to μ_{h·a}, by the definition of conditioning; for the second claim take π = (a b), which preserves μ_h. (2) is (1) with Theorem 6.2. (3) A machine's state and memory at h determine μ_h equivariantly, so pasts it identifies are in the same state, and its memory supports μ_h, so it contains the least support. ∎
+
+**[Reading]**
+
+- This is the Myhill–Nerode theorem of the theory of nominal sets, for laws instead of languages. In the terms of THEORY's table of classical families, it is the row "automata and causal states" with the entry in its last column, *missing: particulars*, filled in. A causal state is a class of pasts with the same future. A state here is a class of pasts with the same future *up to who is who*, together with the list of who still matters.
+- It answers the question the notes left open, "what is an object before a criterion for it has been written": the universals of a law are its states, the particulars are the members of their memories, and both are defined by the law alone.
+- The symmetry of a memory is part of the logical form. "The keys that have been bound and not yet asked for" is a set; a stack of open brackets is a tuple. The removed build could represent neither as such.
+- A law has a *finite form* when it has finitely many states. That is the condition under which everything below works, and it is the analogue of orbit-finiteness, which in model-theoretic terms is definability over a structure whose automorphism group has finitely many orbits on tuples of each length **[K]**.
+
+### 6.3 Not a classical method
+
+A machine over states alone, with no memory, is a hidden Markov model or an automaton; by Proposition 4.2 it pays log m at every remembered name. A longest-match model has a memory but it is the whole literal past, with no states and no forgetting, so it cannot say which earlier name will be referred to when that is decided by the state and not by the literal context. A machine of states with memories is neither, and the difference is not a matter of degree: Theorem 6.3 says the memory and its symmetry are part of what the law *is*.
+
+Against the attention layer of §5.1: a place in the memory is a link to the position that put the name there. So the canonical machine is a network of the kind §5 described, in which what is attended to is fixed by the state. What the theorem adds is that this network is unique, and that it has a size: the number of states and the size of their memories.
 
 ---
 
-## 7. Sources
+## 7. Units
 
-**Proved here.** Proposition 2.3; Lemma 2.2; Theorems 3.1, 3.2 and 3.3; the remark on bounded memory in 3.4; Propositions 4.1 and 4.2; Corollary 5.1; Proposition 6.1. Checks F1 to F4 compare Theorems 3.1 to 3.3 and Lemma 2.2 with brute force on laws over five signs, and pass.
+On raw bytes the names are spelled, so the canonical machine is needed over units and not over bytes. §6 of the previous version of this file asked whether the units of a law are determined by it. In the limit of text they are.
 
-**Cited from memory [K].** Shannon; the convergence of conditional entropies to the entropy rate. De Finetti. Ryll-Nardzewski. Kamp's theorem; McNaughton and Papert; Yang, Chiang and Angluin 2024 on masked hard-attention transformers; Yang and Chiang 2024 on counting. Simon 2011 (coloured linear orders are dp-minimal). Induction and copying circuits in transformers (Olsson et al. 2022). Learning from substitutability (Clark and Eyraud 2007).
+**[Def]** A set of strings is a *code* when every string has at most one factorisation into its members; the strings that have one form a *free* submonoid, and the code is its unique basis.
 
-**Not carried over.** The learner, its experiments, the baselines and all scores have been removed from this folder. They remain in the history of the branch, up to commit `6cb547a`.
+**Theorem 7.1 (units are canonical under recombination) [P, given K].** Let X be the support of the law: the texts with positive probability. The intersection of all free submonoids containing X is free. Its basis U is therefore the coarsest code in which every text factors: every other such code cuts the members of U into pieces. If the law is generated from a code C by a law on sequences of units under which every sequence of units is possible, then U = C.
+
+*Proof.* The intersection of free submonoids of a free monoid is free (Tilson) **[K]**; a free submonoid is finer than another exactly when it contains it. If every sequence over C is possible then X generates the submonoid of all products of members of C, which is free with basis C, and it is contained in every free submonoid containing X. ∎
+
+So clause P3 of the picture theory, that whatever the forms permit is possible, is what makes units canonical: where units recombine freely, the coarsest code that every text respects is the units. A word-splitter is not needed and a menu of boundaries is not needed. The free submonoid is also what a criterion needs: by Schützenberger's characterisation **[K]** it is the closure of the texts under one rule, *if u, uw, wv and v are admissible then so is w*, which is a statement about order and sameness only.
+
+**What this does not give.** The theorem is about the support of the law. A finite corpus is a finite set of texts, usually itself a code, and its own coarsest code is the texts themselves. A procedure for a finite corpus has to estimate which recombinations are possible from those that occurred, and I have no theorem for that. Two further gaps: real names are not equally likely, so exchange holds only up to a weight per name (§3.4); and the spelling of a new name is itself a text one level down, with its own law. Neither is treated.
+
+**Consequence for experiments.** The theory is complete where the units are the signs: texts given as sequences of names and closed signs. It is not complete for bytes. An experiment on bytes would again need units from somewhere, and until there is a finite-sample form of Theorem 7.1 that somewhere would be me.
+
+---
+
+## 8. The learner the theorems license
+
+For texts whose signs are the units, Theorems 6.1 to 6.3 say what is to be found, and each part of it is decided by a count. Code: [nominal/learn.py](nominal/learn.py).
+
+**Supplied.** Order, sameness of sign, counts. Three numbers: the share of texts a sign must recur in to count as a universal, how many signs ahead two futures are compared, and the level of the test.
+
+**The rule.**
+
+1. *Universals and names* (Proposition 2.3). A sign that recurs in a fixed share of the texts is read as itself. Every other sign is a name, and all that is read of it is where it recurs (Theorem 3.2).
+2. *Forgetting* (Theorem 6.1). After a transition, a remembered name is dropped if it is never referred to again. Under the pattern law the only thing a text can show about a name is where it recurs, so this is exactly the test of whether it is in the least support.
+3. *Identity* (Theorem 6.3). The new past is the same state as an existing one if some matching of their memories makes the laws of their next D signs agree, by a test of homogeneity. Otherwise it is a new state.
+4. Repeat, in order of how often an undefined transition is met, until none is met often.
+
+**Proposition 8.1 [P].** With exact statistics, on a law with N states, the rule with D ≥ N − 1 returns the canonical machine.
+
+*Proof.* Every past it examines is assigned its least memory by step 2 and Theorem 6.1. Two states of a deterministic machine with N states whose laws agree on the next N − 1 signs agree altogether (the classical refinement argument), so step 3 identifies two pasts exactly when they are in the same state. The transitions are then those of Theorem 6.3. ∎
+
+With counts in place of exact statistics the rule errs with the probability of its tests. I have not worked out the rate.
+
+**What this is, plainly.** It is state merging, the method of the automata row, carried out up to renaming and with a memory. What the classical method lacks is exactly what the lift supplies. Learning automata over names is known as a problem with queries to a teacher **[K]**; here it is done from text, with forgetting decided by counts, and the object returned is fixed in advance by a theorem.
+
+---
+
+## 9. What it learns
+
+Three worlds, each generated by a machine with a memory of names ([nominal/worlds.py](nominal/worlds.py)). Names are drawn from a pool of a thousand million, so that in 200,000 signs about 80,000 distinct signs occur and almost none occurs in two texts: the regime of Proposition 4.1, where no literal record is ever filled. The learner sees the texts and nothing else.
+
+The test is not a score. It is whether the representation is the generating one ([nominal/run.py](nominal/run.py), output in [nominal/OUTPUT.txt](nominal/OUTPUT.txt)): on unseen texts, is each learned state one state of the generator and conversely, is the learned memory at every position exactly the set of names the generator's future depends on, and does the memory have the right symmetry.
+
+| World | Generator | Learned | States correspond one to one | Memory equals the generator's | Symmetry found |
+|---|---|---|---|---|---|
+| **Bind and recall.** Two keys are bound to values, then asked for in either order | 10 states, memory up to 4 | 10 states, memories 0,1,2,3,4,4,3,2,1,0 | yes | 40,000 of 40,000 positions | exchanging the two pairs, in the two states where both are pending: the memory is a set of pairs |
+| **Stack.** Names are opened and closed in reverse order, to depth 3 | 4 states, memory = depth | 4 states, memories 0,1,2,3 | yes | 42,660 of 42,660 | none: the memory is a tuple |
+| **Overwrite.** A name is set, a later one replaces it, a closed sign asks for the current one | 3 states, memory up to 1 | 3 states, memories 0,1,1 | yes | 26,639 of 26,639 | – |
+
+Reading the learned machines in the output: in bind and recall, the state after the mark reads "the name in place 0" or "the name in place 2", each half the time, and both lead to the same state with three names kept; that is "either key, and then its value, and the key is no longer needed". In overwrite, reading a new name while holding one leads back to the same state with one name kept: the old one has been dropped, because it is never referred to again. The universals were found by recurrence: the mark, the question and the end of text, and nothing else.
+
+**What this shows and what it does not.** It shows that the objects of §6, states, memories and their symmetries, are learnable from text by counts, exactly, in worlds where every literal method is empty by construction. It is one small experiment on worlds with finite form, small memories and no noise beyond the randomness of the law. It does not show anything about natural text, where names are spelled, recur with unequal weights, and the form is not known to be finite.
+
+---
+
+## 10. Where this stands now
+
+| Condition | Status |
+|---|---|
+| The objects of a law are defined by the law | Kinds (Theorem 3.1), memory (6.1) and states (6.3): yes. Units: yes in the limit of text, under recombination (7.1) |
+| (A) Not a classical method | Proved for laws with names (§4, §6.3). The learner is state merging up to renaming, and what it returns is not an object of any classical family |
+| (B) Comparable with transformers | The canonical machine is an attention network whose links are fixed by its state (§5, §6.3). A statement about representation |
+| Learnable from order, sameness and counts | For texts over names with a finite form: yes, with exact statistics (8.1), and observed (§9) |
+| From raw bytes | No. Needs a finite-sample form of Theorem 7.1, weighted names, and the law of spellings |
+
+**Next, in order.**
+
+1. A finite-sample theorem for units: which recombinations must a corpus contain for the closure of §7 to return the units, and how is "possible" estimated from "occurred".
+2. Names with weights: the exchange relation up to a factor per name, and the form of Theorems 3.2 and 6.2 under it.
+3. Noise and scale for the learner of §8: the rate of its errors, and laws whose machines are large.
+4. Kinds of closed signs and of states: abstraction above the machine. Two states with the same law up to a renaming of *closed* signs are of one kind in the sense of §3, and that is where a tower would start.
+
+---
+
+## 11. Sources
+
+**Proved here.** Proposition 2.3; Lemma 2.2; Theorems 3.1, 3.2 and 3.3; Propositions 4.1 and 4.2; Corollary 5.1; Theorems 6.1, 6.2 and 6.3; Proposition 8.1. Theorem 7.1 is a consequence of a known theorem. Checks F1 to F5 compare Theorems 3.1 to 3.3, Lemma 2.2 and Theorems 6.1 to 6.3 with brute force on small laws, and pass.
+
+**Cited from memory [K].** Shannon; the convergence of conditional entropies to the entropy rate. De Finetti. Ryll-Nardzewski. Kamp's theorem; McNaughton and Papert; Yang, Chiang and Angluin 2024 on masked hard-attention transformers; Yang and Chiang 2024 on counting. Simon 2011 (coloured linear orders are dp-minimal). Induction and copying circuits in transformers (Olsson et al. 2022). Gabbay and Pitts (nominal sets, least supports); Kaminski and Francez (automata with a finite memory of names); Bojańczyk, Klin and Lasota 2014 (automata theory in nominal sets, the Myhill–Nerode theorem there); Moerman et al. 2017 (learning nominal automata with queries). Tilson 1972 (the intersection of free submonoids is free); Schützenberger (free submonoids are the stable ones); Berstel, Perrin and Reutenauer, *Codes and Automata*.
+
+**Measured.** §9 only: three synthetic worlds, read by whether the generating machine was recovered.
+
+**Not carried over.** The earlier learner, its experiments, the baselines and all scores have been removed from this folder. They remain in the history of the branch.

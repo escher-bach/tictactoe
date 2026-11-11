@@ -1,0 +1,49 @@
+=== bind and recall: 20000 texts, 200000 signs, 79999 distinct signs
+universals found: [-1, 0]   (END = -1)
+learned: 10 states, memory sizes [0, 1, 2, 3, 4, 4, 3, 2, 1, 0]
+  state 0 [memory 0]: new 1.00->1
+  state 1 [memory 1]: new 1.00->2
+  state 2 [memory 2]: new 1.00->3
+  state 3 [memory 3]: new 1.00->4
+  state 4 [memory 4, unchanged by [(2, 3, 0, 1)]]: c0 1.00->5
+  state 5 [memory 4, unchanged by [(2, 3, 0, 1)]]: r0 0.50->6, r2 0.50->6
+  state 6 [memory 3]: r0 1.00->7
+  state 7 [memory 2]: r0 1.00->8
+  state 8 [memory 1]: r0 1.00->9
+  state 9 [memory 0]: end 1.00->0
+unseen texts: 40000 positions; learned state -> generating state is a function: True; its inverse is a function: True; states of the generator: 10
+memory equals the generator's live names at 40000/40000 positions; texts on which the machine was undefined: 0/4000
+    state 0 = {('bind-key', 0): 4000}
+    state 1 = {('bind-value', 0): 4000}
+    state 2 = {('bind-key', 1): 4000}
+    state 3 = {('bind-value', 1): 4000}
+    state 4 = {('mark',): 4000}
+    state 5 = {('ask-key', 2): 4000}
+    state 6 = {('ask-value', 2): 4000}
+    state 7 = {('ask-key', 1): 4000}
+    state 8 = {('ask-value', 1): 4000}
+    state 9 = {('end',): 4000}
+=== stack: 20000 texts, 216816 signs, 98403 distinct signs
+universals found: [-1]   (END = -1)
+learned: 4 states, memory sizes [0, 1, 2, 3]
+  state 0 [memory 0]: new 0.70->1, end 0.30->0
+  state 1 [memory 1]: r0 0.60->0, new 0.40->2
+  state 2 [memory 2]: r1 0.60->1, new 0.40->3
+  state 3 [memory 3]: r2 1.00->2
+unseen texts: 42660 positions; learned state -> generating state is a function: True; its inverse is a function: True; states of the generator: 4
+memory equals the generator's live names at 42660/42660 positions; texts on which the machine was undefined: 0/4000
+    state 0 = {('depth', 0): 13225}
+    state 1 = {('depth', 1): 15369}
+    state 2 = {('depth', 2): 10105}
+    state 3 = {('depth', 3): 3961}
+=== overwrite: 20000 texts, 131927 signs, 48005 distinct signs
+universals found: [-1, 0]   (END = -1)
+learned: 3 states, memory sizes [0, 1, 1]
+  state 0 [memory 0]: new 1.00->1
+  state 1 [memory 1]: c0 0.40->2, new 0.35->1, end 0.25->0
+  state 2 [memory 1]: r0 1.00->1
+unseen texts: 26639 positions; learned state -> generating state is a function: True; its inverse is a function: True; states of the generator: 3
+memory equals the generator's live names at 26639/26639 positions; texts on which the machine was undefined: 0/4000
+    state 0 = {('empty',): 4000}
+    state 1 = {('holding',): 16174}
+    state 2 = {('asked',): 6465}

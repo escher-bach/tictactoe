@@ -2,4 +2,8 @@
 [PASS] F2 quotient theorem: 20 invariant laws: P(x) = Q(kinded pattern of x) / product over kinds of falling factorials
 [PASS] F3 pointer form: 20 invariant laws: the next sign repeats an earlier name or is a uniform new name of its kind, with weights that depend on the past only through its kinded pattern
 [PASS] F4 literal windows have small rank: 40 random sets of windows of J signs: tree rank <= J
+[PASS] F5 least memory: supports of a future law are closed under intersection (6 laws, every past)
+[PASS] F5 refined pointer form: every name outside the memory, used or not, is equally likely next
+[PASS] F5 memory grows only by the sign read: mem(h a) is inside mem(h) with a added
+[PASS] F5 transitions are well defined: two names outside the memory lead to futures that differ by exchanging them; memory sizes seen: {'overwrite': [0, 1], 'stack': [0, 1, 2, 3]}
 ALL PASS

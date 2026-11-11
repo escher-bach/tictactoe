@@ -164,8 +164,121 @@ def check_F4():
     report("F4 literal windows have small rank", ok, "40 random sets of windows of J signs: tree rank <= J")
 
 
+
+
+# ---------------------------------------------------------------- F5: memory and states
+def law_from_rule(rule, V, n):
+    """A law on strings of length n from a rule giving the next-sign distribution."""
+    P = {}
+    for x in itertools.product(range(V), repeat=n):
+        p = 1.0
+        for t in range(n):
+            p *= rule(x[:t])[x[t]]
+            if p == 0:
+                break
+        if p > 0:
+            P[x] = p
+    return P
+
+
+def check_F5():
+    """Least memory, the refined pointer form, and that memory only grows by the sign just read.
+    Signs: 0 is a closed sign; 1..6 are names of one kind (six names, texts of four signs)."""
+    V, n, names = 7, 4, list(range(1, 7))
+
+    def overwrite(past):                       # a name is set; a later name overwrites it; 0 asks for it
+        d = [0.0] * V
+        cur = next((c for c in reversed(past) if c != 0), None)
+        if cur is None:
+            for a in names:
+                d[a] = 1 / 6
+            return d
+        d[0] = 0.3
+        d[cur] = 0.3 if past[-1] == 0 else 0.1
+        rest = [a for a in names if a != cur]
+        for a in rest:
+            d[a] = (1 - d[0] - d[cur]) / len(rest)
+        return d
+
+    def stack(past):                           # open a name, open another, close in reverse order
+        d = [0.0] * V
+        opened = []
+        for c in past:
+            if opened and c == opened[-1]:
+                opened.pop()
+            elif c != 0:
+                opened.append(c)
+        if opened:
+            d[opened[-1]] = 0.5
+            rest = [a for a in names if a not in opened]
+            for a in rest:
+                d[a] = 0.4 / len(rest)
+            d[0] = 0.1
+        else:
+            for a in names:
+                d[a] = 0.9 / 6
+            d[0] = 0.1
+        return d
+
+    blocks = [[0], names]
+    laws = [("overwrite", law_from_rule(overwrite, V, n)), ("stack", law_from_rule(stack, V, n))]
+    for i in range(4):
+        P, _ = invariant_law(blocks, V, n)
+        laws.append((f"random {i}", P))
+    ok_meet = ok_point = ok_grow = ok_trans = True
+    sizes = {}
+    for name, P in laws:
+        pref = {}
+        for x, p in P.items():
+            for t in range(n + 1):
+                pref[x[:t]] = pref.get(x[:t], 0) + p
+
+        def future(h):
+            return {x[len(h):]: p / pref[h] for x, p in P.items() if x[:len(h)] == h}
+
+        def preserved(F, a, b):
+            return all(abs(p - F.get(swap(w, a, b), 0)) < 1e-12 for w, p in F.items())
+
+        mem = {}
+        for h in pref:
+            if len(h) == n or pref[h] < 1e-15:
+                continue
+            F = future(h)
+            used = sorted(set(h) - {0})
+            ok_pair = {(a, b): preserved(F, a, b) for a in names for b in names if a < b}
+            sup = [set(S) for k in range(len(used) + 1) for S in itertools.combinations(used, k)
+                   if all(ok_pair[a, b] for a in names for b in names if a < b and a not in S and b not in S)]
+            least = set.intersection(*sup)
+            ok_meet &= least in sup                                   # supports are closed under meet
+            mem[h] = least
+            nxt = {}
+            for w, p in F.items():
+                nxt[w[0]] = nxt.get(w[0], 0) + p
+            out = [nxt.get(a, 0) for a in names if a not in least]
+            ok_point &= max(out) - min(out) < 1e-12                   # all names outside memory alike
+            sizes.setdefault(name, set()).add(len(least))
+        for h in mem:
+            for a in range(V):
+                if h + (a,) in mem:
+                    ok_grow &= mem[h + (a,)] <= mem[h] | ({a} - {0})
+        # reading two names outside memory leads to the same state up to renaming
+        for h in mem:
+            if len(h) + 1 >= n:
+                continue
+            out = [a for a in names if a not in mem[h] and pref.get(h + (a,), 0) > 1e-15]
+            for a, b in itertools.combinations(out, 2):
+                Fa, Fb = future(h + (a,)), future(h + (b,))
+                ok_trans &= all(abs(p - Fb.get(swap(w, a, b), 0)) < 1e-12 for w, p in Fa.items())
+    report("F5 least memory", ok_meet, "supports of a future law are closed under intersection (6 laws, every past)")
+    report("F5 refined pointer form", ok_point, "every name outside the memory, used or not, is equally likely next")
+    report("F5 memory grows only by the sign read", ok_grow, "mem(h a) is inside mem(h) with a added")
+    report("F5 transitions are well defined", ok_trans,
+           "two names outside the memory lead to futures that differ by exchanging them; memory sizes seen: "
+           + str({k: sorted(v) for k, v in sizes.items() if not k.startswith("random")}))
+
 if __name__ == "__main__":
     check_F1()
     check_F2_F3()
     check_F4()
+    check_F5()
     print("ALL PASS" if not FAILED else f"FAILED: {FAILED}")

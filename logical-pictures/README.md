@@ -4,14 +4,15 @@ This folder continues two notes that are not in it: **THEORY** ("Logical picture
 
 | File | What |
 |---|---|
-| [FOUNDATIONS.md](FOUNDATIONS.md) | The current state. What the two notes are, why the first attempt to build a learner from them failed, and what is proved before anything is run: kinds as the classes of exchange-invariance of the law (canonical), the quotient theorem, the pointer form, why this is not a classical method at the level of signs, and why it is the form transformers have. Ends with the open problem that blocks any experiment: composite objects |
-| [SOLUTIONS.md](SOLUTIONS.md) | Earlier work on the open problems listed in the two notes: peeling with a margin, uniqueness, class counts, paths, cancellation, occupancy, the exception measure, ordered texts. Refereed and corrected. Partly superseded by FOUNDATIONS.md, as its header says |
-| `checks/foundations_checks.py` | Brute-force checks of the theorems of FOUNDATIONS.md on small cases |
-| `checks/solutions_checks.py` | The same for SOLUTIONS.md |
+| [FOUNDATIONS.md](FOUNDATIONS.md) | The current state. What the objects of a law are, proved: kinds (the classes of exchange-invariance), the quotient theorem, the pointer form, the least memory of a past, and the canonical machine of states up to renaming. Why that is not a classical method and why it is the form transformers have. Units in the limit. Then the learner those theorems license and what it learns |
+| `nominal/learn.py` | The learner: states, memories and their symmetries from order, sameness and counts |
+| `nominal/worlds.py`, `nominal/run.py`, `nominal/OUTPUT.txt` | Three worlds with a known generating machine, and the check that the learned representation is that machine |
+| `checks/foundations_checks.py` | Brute-force checks of the theorems of FOUNDATIONS.md on small laws |
+| [SOLUTIONS.md](SOLUTIONS.md), `checks/solutions_checks.py` | Earlier work on the open problems listed in the two notes. Refereed. Partly superseded, as its header says |
 
-There is no learner, no experiment and no benchmark here. An earlier version had all three; its objects were supplied by hand (a word-splitter with a menu of boundaries, and spelling tests), so its results said nothing about whether logical representations can be learned, and it has been removed. FOUNDATIONS.md §6.3 states what has to be proved before an experiment would mean anything.
+There is no benchmark here. An earlier version had a learner whose objects were supplied by hand; it has been removed. The experiment that is here is on texts whose signs are already the units. Nothing yet licenses one on raw bytes, and FOUNDATIONS.md §7 and §10 say what is missing.
 
 ```
 python3 checks/foundations_checks.py
-python3 checks/solutions_checks.py
+python3 nominal/run.py
 ```
