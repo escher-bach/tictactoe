@@ -2,6 +2,8 @@
 
 *The learner that THEORY.md and WITNESSES.md describe, built and run on text.* Code in [pm/](pm/), experiments in [experiments/](experiments/), every number below reproducible from the commands in §8. Marks: **[P]** proved (here or in [SOLUTIONS.md](SOLUTIONS.md)), **[M]** measured, **[Reading]** interpretation.
 
+> **Correction.** An earlier version of this file said that nothing about words or the space was supplied, and that "the rule chose the space as a boundary among 27 candidates". That was wrong. The feature `run<C>` is an operator written by hand ("the signs since the last sign of class C") with a hand-built menu of boundary classes. Selecting the space from that menu is not learning what an object is. Every result below that uses `run<C>` (all rows of §5.2 after "classes of signs", and the headline table) rests on that supplied operator. The only text8 result that uses no such menu is the path-only form: 1.918 static, 1.824 dynamic at one million characters. The same applies to the hand-chosen spelling and length tests in `pm/tower.py`. Both are being replaced by objects derived from the picture itself (see `OBJECTS.md` when it exists); until then read §4, §5 and §6 with this in mind.
+
 ---
 
 ## 0. In brief
@@ -148,7 +150,7 @@ For the no-dogma criterion, the complete list of what is not learned:
 - the margin of the admission test, and the floor and ε of the classes;
 - the symmetry: names are arbitrary, used only through SOLUTIONS Proposition 7.
 
-Not supplied: what a word is, that the space matters, any offset, any context length, any class of letters. The boundary class of a run is chosen by the residue among twenty-seven candidates.
+Also supplied, and this is the serious one: the series operator `run<C>` with its menu of twenty-seven boundary classes. It amounts to supplying the notion of a word and leaving only the choice of the space. Not supplied: any offset, any context length, any class of letters.
 
 ---
 
@@ -234,7 +236,7 @@ SOLUTIONS §9.3 gives the distribution. In short: 42% of the held-out facts are 
 
 | Requirement | In the form learned on text8 |
 |---|---|
-| Criteria that are learned | Every key was admitted by the rule. Nothing about words, spaces or offsets was supplied; the rule chose the space as a boundary among 27 candidates |
+| Criteria that are learned | Every key was admitted by the rule, but from candidates that include the hand-written `run<C>` operator and its menu of boundaries (see the correction at the top). Offsets and classes of signs are not supplied |
 | Objects of both scopes | 12 literal sorts and 10 pointer sorts over recency links; objects first named in a text keep records within it |
 | Criteria defined over objects already constructed | Six sorts are built over a recency object or a learned class, up to three levels deep (`same(last{cls(run<aoq>) & …}, last2{…}) => repeats last{… last{…} …}`) |
 | Several objects named at one position | 22 |

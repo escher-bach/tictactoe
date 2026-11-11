@@ -51,7 +51,7 @@ def profile(n0, n1):
 
 
 @njit(cache=True, nogil=True)
-def count_pass(fkey, flabel, freeze, log2size, q):
+def count_pass(fkey, flabel, fupd, freeze, log2size, q):
     """Records of one sort.  fkey[i] names the object fact i is about (0: none).
 
     For each fact, in text order: write the profile of the object's record as it
@@ -94,6 +94,8 @@ def count_pass(fkey, flabel, freeze, log2size, q):
             q[i] = profile(c0[slot], c1[slot])
         else:
             q[i] = 0
+        if not fupd[i]:
+            continue                                   # a fact that is only asked about, not shown
         if not found:
             if used >= limit:
                 continue
@@ -113,7 +115,7 @@ def count_pass(fkey, flabel, freeze, log2size, q):
 
 
 @njit(cache=True, nogil=True)
-def fit_table(st, q, label, lo, hi):
+def fit_table(st, q, label, fupd, lo, hi):
     """A configuration sort: (bucket of the description so far, profile of a new object).
 
     Its record is a count per cell.  Where a cell has little or no record, the default
@@ -123,6 +125,8 @@ def fit_table(st, q, label, lo, hi):
     T = np.zeros((NPB, NPROF, 2), np.float64)
     E = np.zeros(NPROF, np.float64)                    # what the description expected, per profile
     for i in range(lo, hi):
+        if not fupd[i]:
+            continue
         s = st[i]
         pos = (s + ST_MAX) * (NPB - 1) / (2 * ST_MAX)
         j = int(pos)
@@ -179,9 +183,9 @@ def bits(st, label, lo, hi):
 
 
 @njit(cache=True, nogil=True)
-def gain_of(st, q, label, lo_fit, hi_fit, lo_val, hi_val):
+def gain_of(st, q, label, fupd, lo_fit, hi_fit, lo_val, hi_val):
     """Residue removed on the validation facts by conjoining one more object."""
-    P = fit_table(st, q, label, lo_fit, hi_fit)
+    P = fit_table(st, q, label, fupd, lo_fit, hi_fit)
     tot = 0.0
     for i in range(lo_val, hi_val):
         pos = (st[i] + ST_MAX) * (NPB - 1) / (2 * ST_MAX)
@@ -312,3 +316,31 @@ def partner_table(f, x, card, n):
                     agree[v, w] += 1
         last[v] = x[t]
     return agree, total
+
+
+@njit(cache=True, nogil=True)
+def series_open(x, open_at, kmax):
+    """Series along adjacency, with boundaries the picture itself supplies.
+
+    open_at[t] says that a new object begins at position t.  W[t] is the object in
+    progress before position t (1 if it has no sign yet); PW[k][t] the k-th completed
+    object before it.  No class of signs is involved.
+    """
+    n = x.shape[0]
+    W = np.empty(n, np.int64)
+    PW = np.zeros((kmax, n), np.int64)
+    cur = np.uint64(1)
+    hist = np.zeros(kmax, np.uint64)
+    for t in range(n):
+        if open_at[t]:
+            for k in range(kmax - 1, 0, -1):
+                hist[k] = hist[k - 1]
+            hist[0] = cur
+            cur = np.uint64(1)
+        W[t] = cur
+        for k in range(kmax):
+            PW[k, t] = hist[k]
+        cur = (cur * np.uint64(0x100000001B3) + np.uint64(x[t] + 1)) * np.uint64(0x9E3779B97F4A7C15)
+        cur ^= cur >> np.uint64(32)
+        cur = (cur >> np.uint64(2)) | np.uint64(2)
+    return W, PW

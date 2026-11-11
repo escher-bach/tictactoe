@@ -193,12 +193,16 @@ def canon_key(feats):
 class Picture:
     """A text, its facts under a sign code, and the features built over it so far."""
 
-    def __init__(self, x, code, bounds, ntrain, aux=None, tower=None):
+    def __init__(self, x, code, bounds, ntrain, aux=None, tower=None, open_at=None, all_nodes=False):
         self.x = np.ascontiguousarray(x, dtype=np.int64)
         self.n = len(x)
         self.code, self.bounds, self.ntrain = code, bounds, ntrain
         self.aux = {} if aux is None else aux          # learned class maps, keyed by feature spec
         self.tower = tower
+        self.open_at = open_at                          # positions where the picture says an object begins
+        if all_nodes:
+            self._all_node_facts(ntrain)
+            return
         sd = code["depth"][self.x].astype(np.int64)
         cd = np.zeros(self.n, np.int64)                 # object facts stated where an object begins
         if tower is not None:
@@ -223,9 +227,37 @@ class Picture:
         self.fnode = fnode.astype(np.int32)
         self.fbit = fbit.astype(np.uint8)
         self.Mtrain = int(self.off[ntrain])
+        self.fupd = np.ones(self.M, np.uint8)
         self.cache = {}
         self.keycache = {(): np.ones(self.n, np.uint64)}
         self.log2pos = max(12, int(np.ceil(np.log2(self.n * 1.4))))
+
+    def _all_node_facts(self, ntrain):
+        """A picture that asks, at every position, about every determinable of the sign code,
+        not only those on the path of the sign that occurs.  Facts off that path are read
+        from the records and never written.  Used to see how determinate the picture is."""
+        code, n = self.code, self.n
+        nn = code["nnodes"]
+        ndepth = np.zeros(nn, np.int64)
+        for s in range(code["V"]):
+            for d in range(code["depth"][s]):
+                ndepth[code["codenode"][s, d]] = d
+        self.off = np.arange(n + 1, dtype=np.int64) * nn
+        self.M = n * nn
+        self.fpos = np.repeat(np.arange(n, dtype=np.int32), nn)
+        node = np.tile(np.arange(nn), n)
+        d = ndepth[node]
+        self.fdepth = d.astype(np.int8)
+        self.fnode = node.astype(np.int32)
+        xs = self.x[self.fpos]
+        on = code["codenode"][xs, d] == node
+        self.fupd = on.astype(np.uint8)
+        self.fbit = np.where(on, code["codebit"][xs, d], 0).astype(np.uint8)
+        self.fobj = np.zeros(self.M, bool)
+        self.Mtrain = ntrain * nn
+        self.cache = {}
+        self.keycache = {(): np.ones(n, np.uint64)}
+        self.log2pos = max(12, int(np.ceil(np.log2(n * 1.4))))
 
     # -- features ---------------------------------------------------------
     def feature(self, spec):
@@ -272,6 +304,12 @@ class Picture:
             else:
                 out = np.ones(n, np.uint64)
             out = np.where(obj == 0, np.uint64(0), out).astype(np.uint64)
+        elif kind == "RUN":
+            W, PW = K.series_open(x, self.open_at, 3)
+            self.cache[("RUN", 0)] = W.astype(np.uint64)
+            for k in range(3):
+                self.cache[("RUN", k + 1)] = PW[k].astype(np.uint64)
+            return self.cache[spec]
         elif kind in ("WC", "CUR"):
             tw = self.tower
             cur = tw.run_tok
@@ -414,7 +452,7 @@ class Picture:
         q = np.empty(self.M, np.uint16)
         nocc = int(np.count_nonzero(fkey))
         log2 = max(10, min(27, int(np.ceil(np.log2(max(nocc, 1) * 2.2)))))
-        K.count_pass(fkey, lab, self.M if freeze is None else freeze, log2, q)
+        K.count_pass(fkey, lab, self.fupd, self.M if freeze is None else freeze, log2, q)
         return q, lab
 
 
@@ -429,7 +467,7 @@ class Learner:
 
     def __init__(self, x, V, ntrain, max_key=6, max_offset=12, class_depths=(1, 2, 3),
                  threads=3, min_gain=0.002, log=print, use=("S", "C", "W", "R", "EQ", "CLS", "PTR", "XC"),
-                 code_eps=0.1, tower=None, tower_depths=(2, 3, 5, 7, 10, 16)):
+                 code_eps=0.1, tower=None, tower_depths=(2, 3, 5, 7, 10, 16), open_at=None):
         self.code = build_code(x[:ntrain], V, code_eps)
         self.bounds = boundary_candidates(self.code, x[:ntrain]) if "W" in use else []
         self.tower_args = tower
@@ -437,7 +475,7 @@ class Learner:
         if tower is not None:                           # tower: dict(boundary=..., rounds=...)
             tw = Tower(x, V, ntrain=ntrain, log=log, **tower)
         self.tower_depths = tower_depths
-        self.pic = Picture(x, self.code, self.bounds, ntrain, tower=tw)
+        self.pic = Picture(x, self.code, self.bounds, ntrain, tower=tw, open_at=open_at)
         self.use, self.max_key, self.max_offset = set(use), max_key, max_offset
         self.class_depths = [d for d in class_depths if d < self.code["D"]]
         self.threads, self.min_gain, self.log = threads, min_gain, log
@@ -457,6 +495,8 @@ class Learner:
         if "EQ" in self.use:
             self._add(("EQ", ("S", 1), ("S", 2)))
         self._add(("XC", ("S", 1)))
+        if open_at is not None:
+            self.pool.append(("RUN", 0))
         if tw is not None:
             for d in self.tower_depths:
                 self.pool.append(("WC", 1, d))
@@ -481,7 +521,7 @@ class Learner:
         p = self.pic
         q, lab = p.profiles(sort)
         if sort[1] is None:
-            P = K.fit_table(self.st, q, lab, 0, p.Mtrain)
+            P = K.fit_table(self.st, q, lab, p.fupd, 0, p.Mtrain)
             new = np.empty_like(self.st)
             K.apply_table(P, self.st, q, new)
         else:
@@ -507,6 +547,8 @@ class Learner:
             if f[0] == "W":
                 self._add(("PW", f[1], 1))
                 self._add(("CLS", f))
+            if f[0] == "RUN" and f[1] < 3 and ("RUN", f[1] + 1) not in self.pool:
+                self.pool.append(("RUN", f[1] + 1))
             if f[0] == "WC" and f[1] < 3:
                 for d in self.tower_depths:
                     if ("WC", f[1] + 1, d) not in self.pool:
@@ -530,7 +572,7 @@ class Learner:
         p = self.pic
         sign = self._pointer_sign(sort)
         st_rel = self.st * sign
-        P = K.fit_table(st_rel, q, lab, 0, p.Mtrain)
+        P = K.fit_table(st_rel, q, lab, p.fupd, 0, p.Mtrain)
         new = np.empty_like(self.st)
         K.apply_table(P, st_rel, q, new)
         return new * sign, P
@@ -573,7 +615,7 @@ class Learner:
         p = self.pic
         q, lab = p.profiles(sort)
         st = self.st if sort[1] is None else self.st * self._pointer_sign(sort)
-        after = K.gain_of(st, q, lab, 0, p.Mtrain, p.Mtrain, p.M)
+        after = K.gain_of(st, q, lab, p.fupd, 0, p.Mtrain, p.Mtrain, p.M)
         return self.cur - after
 
     def _eval_many(self, sorts):
@@ -647,6 +689,8 @@ def fmt_feature(f, bounds=None):
         return f"cls({fmt_feature(f[1], bounds)})"
     if k == "XC":
         return f"key({fmt_feature(f[1], bounds)})"
+    if k == "RUN":
+        return "object" if f[1] == 0 else f"object[-{f[1]}]"
     if k == "WC":
         return f"kind{f[2]}[-{f[1]}]"
     if k == "CUR":
@@ -660,7 +704,7 @@ def fmt_sort(sort, bounds=None):
 
 
 # ----------------------------------------------------------------- using a learned form
-def run_form(form, x_train, x_test, static=False, log=None, sorts=None):
+def run_form(form, x_train, x_test, static=False, log=None, sorts=None, all_nodes=False, open_at=None):
     """Picture a new text in a form already found.  Returns bpc on x_test after each sort.
 
     static=False: every record keeps growing while the test text is read (each fact is
@@ -672,14 +716,14 @@ def run_form(form, x_train, x_test, static=False, log=None, sorts=None):
     tw = None
     if form.get("tower"):
         tw = Tower(x, form["code"]["V"], ntrain=len(x_train), **form["tower"])
-    p = Picture(x, form["code"], form["bounds"], len(x_train), tower=tw)
+    p = Picture(x, form["code"], form["bounds"], len(x_train), tower=tw, open_at=open_at, all_nodes=all_nodes)
     st = np.zeros(p.M, np.float32)
     ntest = len(x_test)
     ladder = []
     for sort in (form["sorts"] if sorts is None else sorts):
         q, lab = p.profiles(sort, freeze=p.Mtrain if static else None)
         if sort[1] is None:
-            P = K.fit_table(st, q, lab, 0, p.Mtrain)
+            P = K.fit_table(st, q, lab, p.fupd, 0, p.Mtrain)
             new = np.empty_like(st)
             K.apply_table(P, st, q, new)
         else:
@@ -688,13 +732,13 @@ def run_form(form, x_train, x_test, static=False, log=None, sorts=None):
             cn = p.code["codenode"][np.maximum(ptr, 0), p.fdepth]
             sign = np.where((ptr >= 0) & (cn == p.fnode) & (cb == 1) & ~p.fobj, -1.0, 1.0).astype(np.float32)
             rel = st * sign
-            P = K.fit_table(rel, q, lab, 0, p.Mtrain)
+            P = K.fit_table(rel, q, lab, p.fupd, 0, p.Mtrain)
             new = np.empty_like(st)
             K.apply_table(P, rel, q, new)
             new *= sign
         st = new
         p.remember_key(sort[0])
-        bpc = K.bits(st, p.fbit, p.Mtrain, p.M) / ntest
+        bpc = 0.0 if all_nodes else K.bits(st, p.fbit, p.Mtrain, p.M) / ntest
         ladder.append(bpc)
         if log:
             log(f"  {len(ladder):2d}. {fmt_sort(sort, form['bounds']):70s} {bpc:.4f}")
@@ -709,3 +753,29 @@ def save_form(form, path):
 def load_form(path):
     with open(path, "rb") as f:
         return pickle.load(f)
+
+
+def determinacy(form, x_train, x_test, static=False):
+    """How determinate the picture is before each sign: the entropy, in bits, of what the
+    form expects there.  Computed before the sign is read, so it may be used at that sign."""
+    _, st, p = run_form(form, x_train, x_test, static=static, all_nodes=True)
+    code = form["code"]
+    nn, V = code["nnodes"], code["V"]
+    S = st.reshape(p.n, nn).astype(np.float64)
+    logp = np.zeros((p.n, V))
+    for s in range(V):
+        for d in range(code["depth"][s]):
+            z = S[:, code["codenode"][s, d]]
+            z = z if code["codebit"][s, d] else -z
+            logp[:, s] -= np.log1p(np.exp(-z))
+    pr = np.exp(logp)
+    return -(pr * logp).sum(1) / np.log(2), pr.sum(1)
+
+
+def open_positions(H):
+    """An object ends where the picture stops becoming more determinate: position t opens a
+    new object when the picture is less determinate before t than it was before t-1."""
+    o = np.zeros(len(H), np.bool_)
+    o[0] = True
+    o[1:] = H[1:] > H[:-1]
+    return o
