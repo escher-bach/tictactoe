@@ -1,36 +1,17 @@
-# Logical pictures: the open problems, and a machine that learns
+# Logical pictures
 
-This folder continues two documents that are not in it: **THEORY** ("Logical pictures", the picture theory of meaning as a theory of representation) and **WITNESSES** ("Witness selection"). It does two things.
+This folder continues two notes that are not in it: **THEORY** ("Logical pictures": the picture theory of meaning as a theory of representation) and **WITNESSES** ("Witness selection").
 
-1. **[SOLUTIONS.md](SOLUTIONS.md)** takes the open problems of both documents one at a time. Each is either proved, proved false as posed and replaced, or narrowed with the remaining gap named. Every proof is checked against brute force on small cases by [checks/solutions_checks.py](checks/solutions_checks.py).
-2. **[ARCHITECTURE.md](ARCHITECTURE.md)** turns the theory into a learner, the *picture machine*, and runs it: on text8 against an n-gram, PPM and a small transformer, and on two small worlds built so that only the non-classical objects of the theory can solve them.
-
-Two rules were set for the work and are audited in ARCHITECTURE §0 and §6: the learner must not be a classical method under another name, and nothing may be substituted for the logical picture.
-
-## Layout
-
-| Path | What |
+| File | What |
 |---|---|
-| `SOLUTIONS.md` | the open problems: theorems, proofs, counterexamples |
-| `ARCHITECTURE.md` | the machine, the learning rule, the experiments, the collapse audit |
-| `checks/solutions_checks.py`, `checks/OUTPUT.txt` | exact checks of the theorems (S1–S8) |
-| `checks/causality.py` | the machine sees no future, and its probabilities sum to one |
-| `pm/kernels.py` | the passes: records, profiles, tables, recency, series |
-| `pm/machine.py` | sign code, features, sorts, the learning rule, reading a text in a learned form |
-| `pm/worlds.py` | the two small worlds |
-| `experiments/` | every run reported in ARCHITECTURE §5 |
-| `baselines/` | Kneser–Ney n-gram, PPM, transformer (reference models; their own README) |
-| `results/` | the numbers, as written by the runs; `results/TABLES.md` collects them |
+| [FOUNDATIONS.md](FOUNDATIONS.md) | The current state. What the two notes are, why the first attempt to build a learner from them failed, and what is proved before anything is run: kinds as the classes of exchange-invariance of the law (canonical), the quotient theorem, the pointer form, why this is not a classical method at the level of signs, and why it is the form transformers have. Ends with the open problem that blocks any experiment: composite objects |
+| [SOLUTIONS.md](SOLUTIONS.md) | Earlier work on the open problems listed in the two notes: peeling with a margin, uniqueness, class counts, paths, cancellation, occupancy, the exception measure, ordered texts. Refereed and corrected. Partly superseded by FOUNDATIONS.md, as its header says |
+| `checks/foundations_checks.py` | Brute-force checks of the theorems of FOUNDATIONS.md on small cases |
+| `checks/solutions_checks.py` | The same for SOLUTIONS.md |
 
-## Reproducing
-
-Needs Python 3 with numpy and numba (torch only for the transformer baseline), and `text8` under `$PM_DATA` (default `/tmp/claude-0/data`; the scripts unzip `text8.zip` from https://mattmahoney.net/dc/text8.zip if it is there).
+There is no learner, no experiment and no benchmark here. An earlier version had all three; its objects were supplied by hand (a word-splitter with a menu of boundaries, and spelling tests), so its results said nothing about whether logical representations can be learned, and it has been removed. FOUNDATIONS.md §6.3 states what has to be proved before an experiment would mean anything.
 
 ```
-python3 checks/solutions_checks.py            # the theorems, ~30 s
-python3 checks/causality.py                   # causality and normalisation of the machine
-python3 experiments/learn_text8.py --out runs/form.pkl --min-gain 0.0003 --max-sorts 48
-python3 experiments/eval_text8.py --form runs/form.pkl --n 10000000 --modes static   # ~10 GB; one mode per process
-experiments/ablations.sh                      # which operations earn the result
-python3 experiments/synthetic.py              # the two small worlds
+python3 checks/foundations_checks.py
+python3 checks/solutions_checks.py
 ```

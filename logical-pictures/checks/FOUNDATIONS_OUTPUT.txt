@@ -1,0 +1,5 @@
+[PASS] F1 kinds are canonical: 25 random invariant laws on 5 signs: exchange-invariance is transitive, and a partition's Young subgroup preserves the law iff the partition refines the kinds (all 52 partitions tried)
+[PASS] F2 quotient theorem: 20 invariant laws: P(x) = Q(kinded pattern of x) / product over kinds of falling factorials
+[PASS] F3 pointer form: 20 invariant laws: the next sign repeats an earlier name or is a uniform new name of its kind, with weights that depend on the past only through its kinded pattern
+[PASS] F4 literal windows have small rank: 40 random sets of windows of J signs: tree rank <= J
+ALL PASS

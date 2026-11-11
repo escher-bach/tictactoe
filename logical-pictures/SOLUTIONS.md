@@ -1,6 +1,8 @@
 # The open problems
 
-*The open problems of THEORY.md §10 and WITNESSES.md §8, treated one at a time.* THEORY is the file "Logical pictures"; WITNESSES is "Witness selection". Marks as there: **[P]** proved here, **[P✓]** proved and checked exactly on small cases ([checks/solutions_checks.py](checks/solutions_checks.py), output in [checks/OUTPUT.txt](checks/OUTPUT.txt)), **[K]** known and cited from memory, **[M]** measured on text8 by the learner of [ARCHITECTURE.md](ARCHITECTURE.md), **[C]** conjecture.
+> **Note.** This file was written alongside a learner that has since been removed, because it supplied its own objects by hand ([FOUNDATIONS.md](FOUNDATIONS.md) §2). Where the text below says "the learner" or cites ARCHITECTURE.md it refers to that build. The theorems and their checks do not depend on it. The two sections that reported its measurements (§9.2, §9.3) have been deleted. FOUNDATIONS.md also supersedes two things here: ε-goodness as the notion of identity (§2), and rank as a capacity control (§9.1).
+
+*The open problems of THEORY.md §10 and WITNESSES.md §8, treated one at a time.* THEORY is the file "Logical pictures"; WITNESSES is "Witness selection". Marks as there: **[P]** proved here, **[P✓]** proved and checked exactly on small cases ([checks/solutions_checks.py](checks/solutions_checks.py), output in [checks/OUTPUT.txt](checks/OUTPUT.txt)), **[K]** known and cited from memory, **[C]** conjecture.
 
 ---
 
@@ -17,9 +19,7 @@
 | Occupancy | T 10.5 | "Unoccupied" is one more value of the determinable. Determinables that are never occupied together add rank by their maximum plus at most log₂ of the number of sorts, not by their sum (Theorem 6) | **solved** [P✓] |
 | The exception measure λ | T 10.6 | If the occurrences of one object are exchangeable, the rule λ stands for is a fact about the sort and is read off by counting over objects with the same record (Proposition 7). λ is replaced by a rounding scale for large records, not by nothing | **solved under one added assumption** [P✓]; it is Robbins's empirical Bayes |
 | Ordered texts | T 10.7 | Inside one rigid text nothing is forced (Propositions 8.1, 8.2). For a corpus, the representation theorem applies to the array *texts × objects*, but only to objects that occur in a positive share of texts. Rare objects, which are most of a lexicon, need a different symmetry | **reframed**; dense case [P, given K], sparse case **open** |
-| The rank of text; is language tame? | W 8.1, T 10.3 | A key that conjoins d determinables generates a relation of tree rank at most d, whatever the text. So rank cannot be the number everything turns on. What is measured instead is the length of the conjunctions the learner needs (§9) | **reframed** [P✓] and **measured** [M] |
-
-The learner in [ARCHITECTURE.md](ARCHITECTURE.md) uses five of these directly: the margin (§1) as its admission test, the floor (§3) for its classes, refinement (§4) as the way paths are generated, occupancy (§6) as a value, and the profile rule (§7) as its only estimator.
+| The rank of text; is language tame? | W 8.1, T 10.3 | A key that conjoins d determinables generates a relation of tree rank at most d, whatever the text. So rank cannot be the number everything turns on (§9) | **reframed** [P✓] |
 
 ---
 
@@ -276,34 +276,7 @@ Two things follow.
 - The bound of Theorem 1 is true and useless at the sizes that matter: (ln n/ε)^J classes for J = 8 exceeds any corpus. A determinable with a hundred thousand values has rank 1. Rank bounds the *selection* problem, which is what WITNESSES asked of it. It does not bound the number of classes at a useful level, and it does not measure how much text there must be to fill their records.
 - The quantity that governs cost is the one in WITNESSES Theorem 3: the rank r of the *dependence*, since candidates are tested in m^O(r) passes. In a form whose read-out is a list of sorts (rank 1 over sorts), r is the number of determinables a key conjoins.
 
-**9.2 The measurement [M].** The learner of ARCHITECTURE.md was run on text8 with its keys limited to r determinables. Records were counted on one million characters; the figures are bits per character on a held-out half million, static and dynamic as defined there.
-
-| Keys conjoin at most | Sorts admitted | Static | Dynamic |
-|---|---|---|---|
-| one determinable | 18 | 1.784 | 1.728 |
-| two | 16 | 1.748 | 1.690 |
-| six (the rule never used more than three) | 19 | 1.726 | 1.675 |
-
-For comparison, at the same text: Kneser–Ney n-gram 2.050, PPM 2.132 static and 1.926 dynamic.
-
-Keys of a single determinable already do better than the classical models. That is less surprising than it sounds, because the determinables are not signs: `run<_>` is a whole run of signs since the last space, taken as one object, and a determinable with a hundred thousand values. The second determinable is worth 0.036 bits and the third 0.022. Left free to conjoin six, the rule stopped at three. So relative to the determinables the tower builds, the dependence the rule could find in text8 has rank three, and most of it has rank one. What the measurement cannot say is whether more is there at rank four and above that a greedy rule, adding one determinable at a time, does not see.
-
-**9.3 How analysed is the picture? [M]** In a fully analysed form every fact is either repeated or new and uniform (THEORY Proposition 5.1). For the two-valued facts of the learned picture that means a probability near 0 or 1, or near ½. The distribution of the probability the learned form gave to the fact that occurred, over the held-out facts:
-
-| Probability given to what occurred | Share of the facts | Share of the bits |
-|---|---|---|
-| below 0.05 | 0.6% | 10.1% |
-| 0.05 to 0.2 | 2.3% | 18.6% |
-| 0.2 to 0.4 | 5.4% | 25.2% |
-| 0.4 to 0.6 | 6.8% | 18.4% |
-| 0.6 to 0.8 | 12.6% | 17.6% |
-| 0.8 to 0.95 | 17.4% | 8.4% |
-| 0.95 to 0.99 | 13.3% | 1.4% |
-| above 0.99 | 41.8% | 0.3% |
-
-(Records on one million characters, static reading, 4.73 facts and 1.723 bits per character.) Four facts in ten are repeated facts in the theory's sense: shown, at under one hundredth of a bit each. But the rest is not new-and-uniform. A quarter of the facts are given between 0.2 and 0.8 and carry 61% of the bits, and 3% are near-contradictions of the picture and carry 29%. By the test of THEORY 7.1 this residue is not elementary: the form is far from the bottom of analysis, and the measure of how far is this table.
-
-**Status.** "Is language tame?" (THEORY 10.3) asked for bounded VC dimension after analysis. §9.1 shows that the tree-rank version of the question has a trivial answer. The version that is left is quantitative: how fast do classes fill, at keys of the length text needs? That is a learning curve, and ARCHITECTURE §5 reports the only two points of it measured here.
+**Status.** "Is language tame?" (THEORY 10.3) asked for bounded VC dimension after analysis. §9.1 shows that the tree-rank version of the question has a trivial answer. The version that is left is quantitative: how fast do classes fill, at keys of the length text needs? Nothing here measures it.
 
 ---
 
@@ -314,7 +287,7 @@ Keys of a single determinable already do better than the classical models. That 
 3. **Mixtures with cancellation** (§5.4). A real gap. The first thing to find out is whether any corpus exhibits it.
 4. **Margins along paths** (§4). No bound is known to me, under stability alone, on what a test two links away does to a class that is good one link away.
 5. **Excellent sets** (§2.1). Whether a stronger notion than goodness gives a canonical partition was not examined.
-6. **Abstraction on real text** (ARCHITECTURE §6). The rule finds learned keys and rules of sameness where the residue demands them. On text8 the residue did not demand classes of words. Whether it does with a hundred times the text, or whether the rule's candidates are too poor to show it, is not settled.
+6. **Composite objects.** Nothing in this file says what the objects above the signs are. FOUNDATIONS.md §6 states the problem.
 7. **The cost in classes** (§9). Selection is solved and its cost is the rank. The number of records a form needs before they are filled is not bounded by any theorem here.
 
 ---
@@ -326,5 +299,3 @@ Keys of a single determinable already do better than the classical models. That 
 **Refereed.** A second reader, working from the two source documents and without my reasoning, re-derived each statement and attacked it by brute force. That pass found that the first version of Theorem 8.3 was vacuous for a sparse lexicon, that Theorem U's exact case and the claim about recency were misstated, and that several summary lines said more than the theorems. This file is the corrected version.
 
 **Cited from memory [K].** Ehrenfeucht and Haussler 1989; Rivest 1987; Hoeffding 1963. Malliaris and Shelah 2014; Lovász and Szegedy 2010; Fox, Pach and Suk 2019. Paige and Tarjan 1987 (partition refinement); Hopcroft 1971. Fiorini, Massar, Pokutta, Tiwary and de Wolf 2012 (rank against non-negative rank); Yannakakis 1991. Robbins 1956; Good 1953; Jelinek and Mercer (held-out estimation); Zabell 1982 (the λ-continuum). De Finetti; Hewitt and Savage 1955; Aldous 1981; Hoover 1979; Kallenberg 2005. Crane and Dempsey 2018; Caron and Fox 2017; Veitch and Roy 2015 (sparse and edge-exchangeable arrays).
-
-**Measured [M].** §9.2 and §9.3, by the scripts in [experiments/](experiments/). They are measurements on one corpus at one size and are not checks of any theorem.
