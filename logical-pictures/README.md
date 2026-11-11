@@ -10,6 +10,8 @@ This folder continues two notes that are not in it: **THEORY** ("Logical picture
 | `checks/foundations_checks.py` | Brute-force checks of the theorems of FOUNDATIONS.md on small laws |
 | [SOLUTIONS.md](SOLUTIONS.md), `checks/solutions_checks.py` | Earlier work on the open problems listed in the two notes. Refereed. Partly superseded, as its header says |
 
+**Status, stated plainly (FOUNDATIONS.md §10).** The theorems about objects stand. The learner is induction of a state machine with a memory of names: by the source notes' own four-part test that is a classical method with one column added, and its size is the product of whatever is independent in the law, so it cannot scale to text. The missing theorem is the decomposition of a state into independent situations with shared kinds.
+
 There is no benchmark here. An earlier version had a learner whose objects were supplied by hand; it has been removed. The experiment that is here is on texts whose signs are already the units. Nothing yet licenses one on raw bytes, and FOUNDATIONS.md §7 and §10 say what is missing.
 
 ```

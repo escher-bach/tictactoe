@@ -22,14 +22,15 @@
 
 | 8 | **Memory and states are canonical.** Each past has a least set of names its future depends on; pasts whose futures agree up to renaming form the states of one machine, determined by the law, whose memories have a size and a symmetry (§6) | [P✓] |
 | 9 | **Units are canonical in the limit.** Where units recombine freely, they are the basis of the smallest free submonoid containing the texts (§7) | [P, given K] |
-| 10 | A learner that uses only order, sameness and counts returns that machine, exactly with exact statistics, and does so on three worlds where every literal record is empty (§8, §9) | [P]; observed |
+| 10 | A learner that uses only order, sameness and counts returns that machine, exactly with exact statistics, and does so on three worlds where every literal record is empty (§8, §9). It is induction of a state machine (§10) | [P]; observed |
 
 **What is still not established.** From raw bytes the names are spelled. Statement 9 is about the support of the law and has no finite-sample form yet, real names are not equally likely, and spellings have their own law (§7). So the experiment of §9 is on texts whose signs are already the units, and nothing here licenses one on bytes. §10 lists what is next.
 
-Against the two conditions set for this work:
+Against the two conditions set for this work (§10 gives the reasons):
 
-- **(A) Does not converge to a classical method.** Proved for laws with names (§4, §6.3). What the learner returns, states with memories and their symmetries, is not an object of any classical family.
-- **(B) Comparable with transformers.** The form the theory forces is the form transformers have, and the canonical machine is an attention network whose links are fixed by its state (§5, §6.3). That is a statement about representation. Nothing is claimed about learning dynamics.
+- **(A) Does not converge to a classical method.** **Not met.** The theorems about objects (kinds, pointers, memory) are not classical. The learner is: it induces a state machine, lifted to names. It has one universal per position and no composition.
+- **(B) Comparable with transformers.** In the form of the predictor, yes (§5). In what is learned, no.
+- **Scaling.** The canonical machine's size is the product of the sizes of whatever is independent in the law (Proposition 10.1). It cannot work on text until states are factored into situations with shared kinds. That theorem is stated in §10.3 and is not proved.
 
 ---
 
@@ -247,11 +248,13 @@ So the pointers of Theorem 3.3 do not range over all earlier names. They range o
 - The symmetry of a memory is part of the logical form. "The keys that have been bound and not yet asked for" is a set; a stack of open brackets is a tuple. The removed build could represent neither as such.
 - A law has a *finite form* when it has finitely many states. That is the condition under which everything below works, and it is the analogue of orbit-finiteness, which in model-theoretic terms is definability over a structure whose automorphism group has finitely many orbits on tuples of each length **[K]**.
 
-### 6.3 Not a classical method
+### 6.3 What kind of object this is
 
-A machine over states alone, with no memory, is a hidden Markov model or an automaton; by Proposition 4.2 it pays log m at every remembered name. A longest-match model has a memory but it is the whole literal past, with no states and no forgetting, so it cannot say which earlier name will be referred to when that is decided by the state and not by the literal context. A machine of states with memories is neither, and the difference is not a matter of degree: Theorem 6.3 says the memory and its symmetry are part of what the law *is*.
+A machine over states alone, with no memory, is a hidden Markov model or an automaton; by Proposition 4.2 it pays log m at every remembered name. A longest-match model has a memory but it is the whole literal past, with no states and no forgetting. A machine of states with memories is neither.
 
-Against the attention layer of §5.1: a place in the memory is a link to the position that put the name there. So the canonical machine is a network of the kind §5 described, in which what is attended to is fixed by the state. What the theorem adds is that this network is unique, and that it has a size: the number of states and the size of their memories.
+That does not make it a logical picture, and an earlier version of this section said more than it should have. §10 takes the question up directly. In short: the memory is the part of a picture, and the state is not. A state is one atom. It names a whole situation up to renaming; it is not a conjunction of facts about objects.
+
+Against the attention layer of §5.1: a place in the memory is a link to the position that put the name there. So the canonical machine is a network of the kind §5 described, in which what is attended to is fixed by the state.
 
 ---
 
@@ -292,7 +295,7 @@ For texts whose signs are the units, Theorems 6.1 to 6.3 say what is to be found
 
 With counts in place of exact statistics the rule errs with the probability of its tests. I have not worked out the rate.
 
-**What this is, plainly.** It is state merging, the method of the automata row, carried out up to renaming and with a memory. What the classical method lacks is exactly what the lift supplies. Learning automata over names is known as a problem with queries to a teacher **[K]**; here it is done from text, with forgetting decided by counts, and the object returned is fixed in advance by a theorem.
+**What this is, plainly.** It is state merging, the method of the automata row, carried out up to renaming and with a memory. It is induction of a state machine. §10 says what follows from that. Learning automata over names is known as a problem with queries to a teacher **[K]**; here it is done from text, with forgetting decided by counts, and the object returned is fixed in advance by a theorem.
 
 ---
 
@@ -310,32 +313,82 @@ The test is not a score. It is whether the representation is the generating one 
 
 Reading the learned machines in the output: in bind and recall, the state after the mark reads "the name in place 0" or "the name in place 2", each half the time, and both lead to the same state with three names kept; that is "either key, and then its value, and the key is no longer needed". In overwrite, reading a new name while holding one leads back to the same state with one name kept: the old one has been dropped, because it is never referred to again. The universals were found by recurrence: the mark, the question and the end of text, and nothing else.
 
-**What this shows and what it does not.** It shows that the objects of §6, states, memories and their symmetries, are learnable from text by counts, exactly, in worlds where every literal method is empty by construction. It is one small experiment on worlds with finite form, small memories and no noise beyond the randomness of the law. It does not show anything about natural text, where names are spelled, recur with unequal weights, and the form is not known to be finite.
+**What this shows and what it does not.** It shows that states, memories and their symmetries are learnable from text by counts, exactly, in worlds where every literal method is empty by construction. The worlds are small on purpose, and by Proposition 10.1 the method would not survive worlds made of several independent parts. It is one small experiment on worlds with finite form, small memories and no noise beyond the randomness of the law. It does not show anything about natural text, where names are spelled, recur with unequal weights, and the form is not known to be finite.
 
 ---
 
-## 10. Where this stands now
+## 10. Is this a logical picture, or state-machine induction?
+
+It is state-machine induction, and as it stands it is a classical method with one thing added. This section says so exactly, says why it cannot scale to text even in principle, and says what theorem is missing.
+
+### 10.1 By the theory's own test
+
+THEORY 3.3 says a theory has collapsed unless four things hold together.
+
+| Requirement | The canonical machine and its learner |
+|---|---|
+| Criteria of identity that are learned | One criterion: "the same state". It is the criterion of the automata row, a class of whole pasts under a right congruence, taken up to renaming |
+| Objects of both scopes | Yes. States are universal, the members of a memory are particular. This is what was added |
+| Criteria defined over objects already constructed | **No.** There is one sort and no tower. Nothing is defined from anything else |
+| Several objects named at one position | Several particulars, **one** universal. A position is in exactly one state |
+
+Two of four. So: the automata row, with its missing column filled in. Filling in that column was worth doing, and Theorems 3.1 to 3.3 and 6.1 to 6.2 (kinds, the pointer form, least memory) are about objects and do not depend on the machine. But the object the learner returns is a state machine, and the claim in the previous version of §0 and §6.3 that it is "not an object of any classical family" was an overstatement.
+
+### 10.2 Why it cannot scale, in principle
+
+**Proposition 10.1 [P].** Let a law be the interleaving of d independent laws, each with N states, the components told apart by their closed signs. Then its canonical machine has at least N^d states.
+
+*Proof.* The future of the whole determines the future of each component, so two pasts that differ in the state of any component are in different states. ∎
+
+A text has many things going on at once that do not determine one another: what is being talked about, where in a sentence one is, each thing mentioned and what has been said of it. The canonical machine has one state for each combination. Its size is the product, the text needed to see each state often enough is the product, and none of it is shared: the learner of §8, having learned two pending pairs, knows nothing about three, because three pairs are different states. This is the reason automata and hidden Markov models fail on language, and lifting them to names does not touch it.
+
+It is also exactly what the picture theory is against. Clause P3 says the possible situations are all combinations of states of affairs, and P4 says the states of affairs are independent. Logical space is a *product*. A state of the machine is a point of that product with the coordinates erased.
+
+### 10.3 What a state is, and what is missing
+
+Theorem 6.3 is true and it is not wasted. It says what the states are: a state is a whole situation up to renaming. In the terms of the notes it is the *isomorphism type of a picture*, not the picture. Two things are already in hand that point from the type back to the picture.
+
+- **The symmetry of a memory is the structure on it [K, Reading].** A group of rearrangements of r places is the automorphism group of a relational structure on those places, and the relations it preserves are determined by it (the correspondence between permutation groups and their invariant relations on a finite set). In bind and recall the symmetry "exchange the two pairs" is the automorphism group of two instances of one binary relation, key-to-value. So each state already carries, canonically, the relations among its particulars. What it does not carry is that the relation in one state is the *same* relation as in another.
+- **Supports add up [K].** The memory of a combination is the union of the memories of its parts. So the particulars of independent components can be told apart.
+
+**The missing theorem.** A decomposition of the canonical machine into components: a finest way of dividing each memory into blocks such that the blocks evolve independently, with the law at a state the product of the laws of its blocks. If that decomposition is unique (as the finest independent grouping of the coordinates of a product measure is), then
+
+- a state is a *bag of small situations*, each a few particulars standing in a relation: states of affairs in the sense of clause P2;
+- situations of one type are exchangeable, so Theorem 3.1 applies to them and gives *kinds of states of affairs*: universals in the full sense, shared across every state they occur in;
+- the law is a law per kind of situation, and its size is the number of kinds, not their product.
+
+That would be a logical picture: several objects at each position, facts about them, independence between facts, and universals that recur. It would also be where a tower starts, since a kind of situation is an object over which further criteria can be defined. And it is where the comparison with a transformer becomes more than formal, because a factored state with shared parts is what a residual stream is.
+
+I do not have this theorem. I have its statement and the two observations above. Interleaving makes it harder than the product-measure case, because the components take turns and the turn-taking is itself part of the law.
+
+### 10.4 Could it work on text, in principle?
+
+Not as it is. In order of how fundamental the gap is:
+
+1. **Factorisation** (10.3). Without it the object learned is a machine, its size is a product, and it is classical. Everything else is secondary to this.
+2. **Kinds above names.** Abstraction over closed signs and over situations. Theorem 3.1 gives it once the things to be exchanged are defined; today it is used only on names.
+3. **Exactness.** Text has no exact exchange symmetry and no state that recurs exactly. Every theorem here is exact, and a version with a margin loses transitivity (3.4). This is not a technicality: it decides whether "the kinds of a law" means anything for a real corpus.
+4. **Units.** From bytes, names are spelled. Theorem 7.1 is a statement about the limit.
+5. **Finite form.** Nothing says a corpus has finitely many kinds of situation.
+
+What can be kept whatever happens to the machine: kinds as exchange classes, the quotient theorem, the pointer form, least memory and its symmetry. Those are theorems about objects.
+
+### 10.5 Summary
 
 | Condition | Status |
 |---|---|
-| The objects of a law are defined by the law | Kinds (Theorem 3.1), memory (6.1) and states (6.3): yes. Units: yes in the limit of text, under recombination (7.1) |
-| (A) Not a classical method | Proved for laws with names (§4, §6.3). The learner is state merging up to renaming, and what it returns is not an object of any classical family |
-| (B) Comparable with transformers | The canonical machine is an attention network whose links are fixed by its state (§5, §6.3). A statement about representation |
-| Learnable from order, sameness and counts | For texts over names with a finite form: yes, with exact statistics (8.1), and observed (§9) |
-| From raw bytes | No. Needs a finite-sample form of Theorem 7.1, weighted names, and the law of spellings |
+| The objects of a law are defined by the law | Kinds (3.1), memory (6.1), states (6.3): yes. Units: in the limit (7.1). **Components: not yet** |
+| (A) Not a classical method | **Not met.** The learner is automaton induction with a memory of names. It fails two of THEORY's four requirements (10.1) |
+| (B) Comparable with transformers | In the form of the predictor (§5): yes. In what is learned: no, a machine with one atom of state per position is not comparable with a factored representation |
+| Scales to text in principle | **No**, by Proposition 10.1, until the factorisation of 10.3 exists |
 
-**Next, in order.**
-
-1. A finite-sample theorem for units: which recombinations must a corpus contain for the closure of §7 to return the units, and how is "possible" estimated from "occurred".
-2. Names with weights: the exchange relation up to a factor per name, and the form of Theorems 3.2 and 6.2 under it.
-3. Noise and scale for the learner of §8: the rate of its errors, and laws whose machines are large.
-4. Kinds of closed signs and of states: abstraction above the machine. Two states with the same law up to a renaming of *closed* signs are of one kind in the sense of §3, and that is where a tower would start.
+**Next.** One problem, not a list: state and prove the decomposition of 10.3, or find the counterexample that shows components are not canonical.
 
 ---
 
 ## 11. Sources
 
-**Proved here.** Proposition 2.3; Lemma 2.2; Theorems 3.1, 3.2 and 3.3; Propositions 4.1 and 4.2; Corollary 5.1; Theorems 6.1, 6.2 and 6.3; Proposition 8.1. Theorem 7.1 is a consequence of a known theorem. Checks F1 to F5 compare Theorems 3.1 to 3.3, Lemma 2.2 and Theorems 6.1 to 6.3 with brute force on small laws, and pass.
+**Proved here.** Proposition 2.3; Lemma 2.2; Theorems 3.1, 3.2 and 3.3; Propositions 4.1 and 4.2; Corollary 5.1; Theorems 6.1, 6.2 and 6.3; Proposition 8.1. Proposition 10.1. Theorem 7.1 is a consequence of a known theorem. Checks F1 to F5 compare Theorems 3.1 to 3.3, Lemma 2.2 and Theorems 6.1 to 6.3 with brute force on small laws, and pass.
 
 **Cited from memory [K].** Shannon; the convergence of conditional entropies to the entropy rate. De Finetti. Ryll-Nardzewski. Kamp's theorem; McNaughton and Papert; Yang, Chiang and Angluin 2024 on masked hard-attention transformers; Yang and Chiang 2024 on counting. Simon 2011 (coloured linear orders are dp-minimal). Induction and copying circuits in transformers (Olsson et al. 2022). Gabbay and Pitts (nominal sets, least supports); Kaminski and Francez (automata with a finite memory of names); Bojańczyk, Klin and Lasota 2014 (automata theory in nominal sets, the Myhill–Nerode theorem there); Moerman et al. 2017 (learning nominal automata with queries). Tilson 1972 (the intersection of free submonoids is free); Schützenberger (free submonoids are the stable ones); Berstel, Perrin and Reutenauer, *Codes and Automata*.
 
